@@ -1,0 +1,7 @@
+#Rock Local Service, connect to ROCK_DEV env
+server:
+  port: ${SERVER_PORT:10001}
+
+persistent:
+  type: FILE
+  folder: C:/Rock/Datas/Calypso/Persistence

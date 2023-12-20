@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: DataCenter
+
+logging:
+  config: classpath:fintech/logback.xml
+
+configs:
+  taskConfigFolder: task
+
+persistent:
+  type: FILE
+  folder: /calypso/Calypso
+
+event:
+  generate: true

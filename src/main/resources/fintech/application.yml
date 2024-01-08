@@ -29,3 +29,9 @@ event:
 local:
   file:
     root: C:/Rock/Datas/Calypso/Persistence/dataCenter
+
+application:
+  calypso:
+    serviceUrl: http://127.0.0.1
+    instanceList: 87v17;30087,129v17;30129
+    serviceName: services

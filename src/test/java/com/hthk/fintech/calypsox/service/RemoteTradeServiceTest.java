@@ -1,6 +1,8 @@
 package com.hthk.fintech.calypsox.service;
 
 import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
+import com.hthk.fintech.exception.ServiceInternalException;
+import com.hthk.fintech.fintechservice.config.AppConfig;
 import com.hthk.fintech.model.data.datacenter.query.EntityTypeEnum;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
@@ -20,12 +22,20 @@ public class RemoteTradeServiceTest {
 
     RemoteTradeService remoteTradeService = new RemoteTradeService();
 
+    public RemoteTradeServiceTest() {
+        AppConfig appConfig = new AppConfig();
+        appConfig.setServiceName("services");
+        appConfig.setServiceUrl("http://127.0.0.1");
+        appConfig.setInstanceList(Arrays.asList("87v17;30087", "129v17;30129"));
+        remoteTradeService.setFsAppConfig(appConfig);
+    }
+
     @Before
     public void setUp() throws Exception {
     }
 
     @Test
-    public void testGetTrade_BY_TRADEFILTER() {
+    public void testGetTrade_BY_TRADEFILTER() throws ServiceInternalException {
 
         ApplicationInstance instance = new ApplicationInstance();
         instance.setName(ApplicationEnum.CALYPSO);

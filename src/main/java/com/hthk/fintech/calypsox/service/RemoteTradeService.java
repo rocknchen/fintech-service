@@ -1,5 +1,7 @@
 package com.hthk.fintech.calypsox.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hthk.calypsox.model.trade.TradeInfoResultSet;
 import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
 import com.hthk.fintech.exception.ServiceInternalException;
 import com.hthk.fintech.fintechservice.config.AppConfig;
@@ -11,12 +13,12 @@ import com.hthk.fintech.model.web.http.*;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import static com.hthk.fintech.config.FintechStaticData.LOG_WRAP;
+import java.util.stream.Collectors;
 
 /**
  * @Author: Rock CHEN
@@ -31,6 +33,8 @@ public class RemoteTradeService {
 
     @Autowired
     private AppConfig fsAppConfig;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     public void setFsAppConfig(AppConfig fsAppConfig) {
         this.fsAppConfig = fsAppConfig;
@@ -69,9 +73,14 @@ public class RemoteTradeService {
 
         String postUrl = getPostUrl(source);
 
-        logger.info(LOG_WRAP, "response", JacksonUtils.toJsonPrettyTry(client.call(postUrl, request, HttpResponse.class)));
-
-        return null;
+        HttpResponse<TradeInfoResultSet> tradeInfoResultSetResp = client.call(postUrl, request, TradeInfoResultSet.class);
+        TradeInfoResultSet resultSet = JacksonUtils.jsonMapper.convertValue(tradeInfoResultSetResp.getData(), TradeInfoResultSet.class);
+        List<com.hthk.calypsox.model.trade.TradeInfo> origList = resultSet.getTradeInfoList();
+        return origList.stream().map(t -> {
+            TradeInfo tradeInfo = new TradeInfo();
+            BeanUtils.copyProperties(t, tradeInfo);
+            return tradeInfo;
+        }).collect(Collectors.toList());
     }
 
     private String getPostUrl(ApplicationInstance source) throws ServiceInternalException {
@@ -83,7 +92,8 @@ public class RemoteTradeService {
     }
 
     private int getServicePort(AppConfig fsAppConfig, String instance) throws ServiceInternalException {
-        String serviceStr = fsAppConfig.getInstanceList().stream().filter(t -> t.contains(instance)).findFirst().orElseThrow(() -> new ServiceInternalException());
+        String serviceStr = fsAppConfig.getInstanceList().stream().filter(t -> t.contains(instance)).findFirst().orElseThrow(
+                () -> new ServiceInternalException("not support instance: " + instance));
         return Integer.valueOf(serviceStr.split(";")[1]);
     }
 

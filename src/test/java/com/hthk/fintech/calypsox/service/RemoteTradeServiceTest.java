@@ -6,12 +6,21 @@ import com.hthk.fintech.fintechservice.config.AppConfig;
 import com.hthk.fintech.model.data.datacenter.query.EntityTypeEnum;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
+import com.hthk.fintech.model.trade.TradeInfo;
 import com.hthk.fintech.model.web.http.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
-import java.util.Arrays;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_FIRE_FIGHT;
+import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
+import static com.hthk.fintech.config.FintechStaticData.LOG_DEFAULT;
+import static com.hthk.fintech.config.FintechStaticData.LOG_WRAP;
 import static org.junit.Assert.*;
 
 /**
@@ -20,13 +29,15 @@ import static org.junit.Assert.*;
  */
 public class RemoteTradeServiceTest {
 
+    private final static Logger logger = LoggerFactory.getLogger(RemoteTradeServiceTest.class);
+
     RemoteTradeService remoteTradeService = new RemoteTradeService();
 
     public RemoteTradeServiceTest() {
         AppConfig appConfig = new AppConfig();
         appConfig.setServiceName("services");
         appConfig.setServiceUrl("http://127.0.0.1");
-        appConfig.setInstanceList(Arrays.asList("87v17;30087", "129v17;30129"));
+        appConfig.setInstanceList(Arrays.asList(ENV_NAME_UAT + ";30087", ENV_NAME_FIRE_FIGHT + ";30129"));
         remoteTradeService.setFsAppConfig(appConfig);
     }
 
@@ -39,17 +50,51 @@ public class RemoteTradeServiceTest {
 
         ApplicationInstance instance = new ApplicationInstance();
         instance.setName(ApplicationEnum.CALYPSO);
-        instance.setInstance("87v17");
+        instance.setInstance(ENV_NAME_UAT);
 
         RequestDateTime dateTime = new RequestDateTime();
         dateTime.setTimeZone("HKT");
         dateTime.setRunDateTime("2023-12-20 14:19:20");
 
         CriteriaTrade criteria = new CriteriaTrade();
-        criteria.setBookList(Arrays.asList("CIFXDH"));
-        criteria.setTradeFilter("HTHK_FICC_TEST");
+//        criteria.setBookList(Arrays.asList("CIFXDH"));
+//        criteria.setTradeFilter("HTHK_FICC_TEST");
+        criteria.setTradeFilter("HTHK_FICC_MACRO_FXO_TEST_FutureFX");
 
         remoteTradeService.getTrade(instance, dateTime, criteria);
+    }
+
+    @Test
+    public void testGetFutureFXBookCount_BY_TRADEFILTER() throws ServiceInternalException {
+
+        ApplicationInstance instance = new ApplicationInstance();
+        instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance(ENV_NAME_UAT);
+
+        RequestDateTime dateTime = new RequestDateTime();
+        dateTime.setTimeZone("HKT");
+        dateTime.setRunDateTime("2023-12-20 14:19:20");
+
+        CriteriaTrade criteria = new CriteriaTrade();
+        criteria.setTradeFilter("HTHK_FICC_MACRO_FXO_TEST_FutureFX");
+
+        List<TradeInfo> tradeInfoList = remoteTradeService.getTrade(instance, dateTime, criteria);
+        Map<String, Integer> countMap = new HashMap<>();
+        Set<String> keySet = new HashSet<>();
+
+        tradeInfoList.forEach(t -> {
+            String book = t.getBook();
+            String pdType = t.getProductType();
+            String pdSubType = t.getProductSubType();
+            String underlying = t.getFutureUnderlyingTickerExchange();
+            String key = book + ":" + pdType + ":" + pdSubType + ":" + underlying;
+            if (!keySet.contains(key)) {
+                keySet.add(key);
+            }
+        });
+        List<String> keyList = keySet.stream().collect(Collectors.toList());
+        Collections.sort(keyList);
+        logger.info(LOG_WRAP, "key", keyList.stream().collect(Collectors.joining("\r\n")));
     }
 
 }

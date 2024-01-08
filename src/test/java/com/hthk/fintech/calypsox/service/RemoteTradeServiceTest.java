@@ -29,6 +29,7 @@ public class RemoteTradeServiceTest {
 
         ApplicationInstance instance = new ApplicationInstance();
         instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance("87v17");
 
         RequestDateTime dateTime = new RequestDateTime();
         dateTime.setTimeZone("HKT");

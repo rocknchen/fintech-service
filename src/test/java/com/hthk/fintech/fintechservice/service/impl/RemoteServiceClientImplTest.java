@@ -71,7 +71,9 @@ public class RemoteServiceClientImplTest {
 
         Class clz = HttpResponse.class;
 
-        HttpResponse resp = client.call(request, clz);
+        String postUrl = "http://127.0.0.1:30129/services/";
+
+        HttpResponse resp = client.call(postUrl, request, clz);
         logger.info(LOG_WRAP, "response", JacksonUtils.toJsonPrettyTry(resp));
     }
 

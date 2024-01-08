@@ -9,6 +9,6 @@ import com.hthk.fintech.model.web.http.HttpServiceRequest;
  */
 public interface RemoteServiceClient {
 
-    <P, C, R> HttpResponse<R> call(HttpServiceRequest<P, C> request, Class<R> clz);
+    <P, C, R> HttpResponse<R> call(String postUrl, HttpServiceRequest<P, C> request, Class<R> clz);
 
 }

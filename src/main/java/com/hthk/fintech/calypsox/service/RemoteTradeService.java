@@ -1,7 +1,6 @@
 package com.hthk.fintech.calypsox.service;
 
 import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
-import com.hthk.fintech.fintechservice.controller.FintechServiceController;
 import com.hthk.fintech.fintechservice.service.impl.RemoteServiceClientImpl;
 import com.hthk.fintech.model.data.datacenter.query.EntityTypeEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static com.hthk.fintech.config.FintechStaticData.LOG_WRAP;
@@ -59,7 +57,9 @@ public class RemoteTradeService {
 
         request.setCriteria(criteria);
 
-        logger.info(LOG_WRAP, "response", JacksonUtils.toJsonPrettyTry(client.call(request, HttpResponse.class)));
+        String postUrl = "";
+
+        logger.info(LOG_WRAP, "response", JacksonUtils.toJsonPrettyTry(client.call(postUrl, request, HttpResponse.class)));
 
         return null;
     }

@@ -9,3 +9,11 @@ persistent:
 local:
   file:
     root: C:/Rock/Datas/Calypso/Persistence/dataCenter
+
+application:
+  calypso:
+    instanceList:
+      - name: 87v17
+        url: http://127.0.0.1:30087/services/
+      - name: 129v17
+        url: http://127.0.0.1:30129/services/

@@ -32,12 +32,12 @@ public class RemoteServiceClientImpl implements RemoteServiceClient {
     private RestTemplate restTemplate;
 
     @Override
-    public <P, C, R> HttpResponse<R> call(HttpServiceRequest<P, C> request, Class<R> clz) {
+    public <P, C, R> HttpResponse<R> call(String postUrl, HttpServiceRequest<P, C> request, Class<R> clz) {
 
-        return callTmp(request, clz);
+        return callTmp(postUrl, request, clz);
     }
 
-    private <R, C, P> HttpResponse<R> callTmp(HttpServiceRequest<P, C> request, Class<R> clz) {
+    private <R, C, P> HttpResponse<R> callTmp(String postUrl, HttpServiceRequest<P, C> request, Class<R> clz) {
 
         restTemplate = new RestTemplate();
         HttpSerializeDefaultObjectMapperFactory objectMapperFactory = new HttpSerializeDefaultObjectMapperFactory();
@@ -53,8 +53,6 @@ public class RemoteServiceClientImpl implements RemoteServiceClient {
         );
         restTemplate.setMessageConverters(messageConverters);
 
-        String url = "http://127.0.0.1:30129/services/";
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -62,7 +60,7 @@ public class RemoteServiceClientImpl implements RemoteServiceClient {
 
         HttpEntity<HttpServiceRequest> requestEntity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<HttpResponse> result = restTemplate.postForEntity(url, requestEntity, HttpResponse.class);
+        ResponseEntity<HttpResponse> result = restTemplate.postForEntity(postUrl, requestEntity, HttpResponse.class);
         return (HttpResponse<R>) result.getBody();
     }
 

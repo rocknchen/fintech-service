@@ -117,13 +117,21 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
     }
 
     private List<FutureFXTradeInfo> convert(List<TradeInfo> tradeInfoList, Map<String, List<FutureInfo>> futureInfoMap) {
-        return tradeInfoList.stream().map(t -> convert(t)).collect(Collectors.toList());
+        return tradeInfoList.stream().map(t -> convert(t, futureInfoMap)).collect(Collectors.toList());
     }
 
-    private FutureFXTradeInfo convert(TradeInfo tradeInfo) {
-        FutureFXTradeInfo futureFXTradeInfo = new FutureFXTradeInfo();
-        futureFXTradeInfo.setBook(tradeInfo.getBook());
-        return futureFXTradeInfo;
+    private FutureFXTradeInfo convert(TradeInfo tradeInfo, Map<String, List<FutureInfo>> futureInfoMap) {
+
+        FutureFXTradeInfo ti = new FutureFXTradeInfo();
+        ti.setBook(tradeInfo.getBook());
+        ti.setTradeDate(tradeInfo.getTradeDateTime().toLocalDate());
+        ti.setTradeDateTime(tradeInfo.getTradeDateTime());
+//        ti.setBuySell(tradeInfo);
+        ti.setProductType(tradeInfo.getProductType());
+        ti.setProductSubType(tradeInfo.getProductSubType());
+
+        return ti;
+
     }
 
     private HttpServiceRequest buildRequest(ApplicationInstance source, RequestDateTime dateTime, CriteriaTrade criteria) {

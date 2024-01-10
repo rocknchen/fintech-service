@@ -13,6 +13,7 @@ import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
 import com.hthk.fintech.model.web.http.*;
 import com.hthk.fintech.structure.utils.JacksonUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 
 import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
 import static com.hthk.fintech.config.FintechStaticData.LOG_DEFAULT;
+import static com.hthk.fintech.config.FintechStaticData.LOG_WRAP;
 
 /**
  * @Author: Rock CHEN
@@ -49,7 +51,7 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
     }
 
     public RemoteTradeFutureFXService() {
-        contractMap.put("UCA", "HKEX,USD");
+        contractMap.put("UCA", "HKEX,CNH");
         contractMap.put("USD.CNH.FX", "SGX,CNH");
     }
 
@@ -80,7 +82,7 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
             String exchange = contractInfoStr.split(",")[0];
             String currency = contractInfoStr.split(",")[1];
             try {
-                List<FutureInfo> futureInfoList = getFutureList(exchange, name, currency, "2022-01-01");
+                List<FutureInfo> futureInfoList = getFutureList(exchange, name, currency, "2000-01-01");
                 map.put(name, futureInfoList);
             } catch (ServiceInternalException e) {
                 throw new RuntimeException(e);
@@ -100,16 +102,19 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
         dateTime.setRunDateTime("2023-12-20 14:19:20");
 
         CriteriaFuture criteria = new CriteriaFuture();
-        criteria.setExchange("HKEX");
-        criteria.setName("UCA");
-        criteria.setCurrency("CNH");
+        criteria.setExchange(exchange);
+        criteria.setName(name);
+        criteria.setCurrency(currency);
         criteria.setExpirationStart(LocalDate.parse(expiry, DateTimeFormatter.ISO_DATE));
 
         return remoteStaticDataFutureService.getFuture(instance, dateTime, criteria);
     }
 
     private void log(Map<String, List<FutureInfo>> futureInfoMap) {
-        futureInfoMap.forEach((k, v) -> logger.info(LOG_DEFAULT, k, v.size()));
+        futureInfoMap.forEach((k, v) -> {
+            logger.info(LOG_DEFAULT, k, v.size());
+            logger.info(LOG_WRAP, k, v.stream().map(t -> t.getTickerExchange()).collect(Collectors.joining(",")));
+        });
     }
 
     private Set<String> getFutureContract(List<TradeInfo> tradeInfoList) {
@@ -122,16 +127,39 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
 
     private FutureFXTradeInfo convert(TradeInfo tradeInfo, Map<String, List<FutureInfo>> futureInfoMap) {
 
+        FutureInfo futureInfo = getFutureInfo(tradeInfo, futureInfoMap);
+
         FutureFXTradeInfo ti = new FutureFXTradeInfo();
         ti.setBook(tradeInfo.getBook());
         ti.setTradeDate(tradeInfo.getTradeDateTime().toLocalDate());
         ti.setTradeDateTime(tradeInfo.getTradeDateTime());
 //        ti.setBuySell(tradeInfo);
+        ti.setTradeId(tradeInfo.getTradeId());
         ti.setProductType(tradeInfo.getProductType());
         ti.setProductSubType(tradeInfo.getProductSubType());
 
-        return ti;
+        if (futureInfo == null) {
+            logger.error(LOG_DEFAULT, tradeInfo.getTradeId(), tradeInfo.getFutureUnderlyingTickerExchange());
+        }
+        if (futureInfo != null) {
+            ti.setTickerExchange(futureInfo.getTickerExchange());
+            ti.setBbTickerExchange(futureInfo.getBbTickerExchange());
+        }
 
+        return ti;
+    }
+
+    private FutureInfo getFutureInfo(TradeInfo tradeInfo, Map<String, List<FutureInfo>> futureInfoMap) {
+
+        String productSubType = tradeInfo.getProductSubType();
+        String tickerExchange = tradeInfo.getFutureUnderlyingTickerExchange();
+        List<FutureInfo> futureInfoList = futureInfoMap.get(productSubType);
+        List<FutureInfo> futureInfos = futureInfoList.stream().filter(t -> tickerExchange.equals(t.getTickerExchange())).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(futureInfos)) {
+            return null;
+        } else {
+            return futureInfos.get(0);
+        }
     }
 
     private HttpServiceRequest buildRequest(ApplicationInstance source, RequestDateTime dateTime, CriteriaTrade criteria) {

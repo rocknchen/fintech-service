@@ -59,7 +59,7 @@ public class RemoteStaticDataFutureServiceTest {
         criteria.setExchange("HKEX");
         criteria.setName("UCA");
         criteria.setCurrency("CNH");
-        criteria.setExpirationStart(LocalDate.parse("2024-01-01", DateTimeFormatter.ISO_DATE));
+        criteria.setExpirationStart(LocalDate.parse("2020-01-01", DateTimeFormatter.ISO_DATE));
 
         List<FutureInfo> futureInfoList = remoteStaticDataFutureService.getFuture(instance, dateTime, criteria);
         logger.info(LOG_WRAP, "futureInfoList", JacksonUtils.toJsonPrettyTry(futureInfoList));

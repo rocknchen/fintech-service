@@ -2,7 +2,6 @@ package com.hthk.fintech.calypsox.service;
 
 import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
 import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
-import com.hthk.common.utils.CSVFileUtils;
 import com.hthk.fintech.exception.ServiceInternalException;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
@@ -65,7 +64,7 @@ public class RemoteTradeFutureFXServiceTest {
         dateTime.setRunDateTime("2023-12-20 14:19:20");
 
         CriteriaTrade criteria = new CriteriaTrade();
-        criteria.setBookList(Arrays.asList("CIFXDH"));
+//        criteria.setBookList(Arrays.asList("CIFXDH"));
         criteria.setTradeFilter("HTHK_FICC_MACRO_FXO_TEST_FutureFX");
 
         List<FutureFXTradeInfo> futureInfoList = remoteTradeFutureFXService.getTrade(instance, dateTime, criteria);

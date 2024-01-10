@@ -3,6 +3,7 @@ package com.hthk.fintech.calypsox.service;
 import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
 import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
 import com.hthk.fintech.exception.ServiceInternalException;
+import com.hthk.fintech.fintechservice.converter.impl.FutureFXTradeInfoConverterImpl;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
 import com.hthk.fintech.model.web.http.RequestDateTime;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
@@ -36,14 +36,18 @@ public class RemoteTradeFutureFXServiceTest {
 
     RemoteTradeFutureFXService remoteTradeFutureFXService = new RemoteTradeFutureFXService();
 
+    FutureFXTradeInfoConverterImpl converter = new FutureFXTradeInfoConverterImpl();
+
     String outputFile;
 
     public RemoteTradeFutureFXServiceTest() {
+
         RemoteServiceUtils.setup(remoteTradeService);
         RemoteServiceUtils.setup(remoteStaticDataFutureService);
         RemoteServiceUtils.setup(remoteTradeFutureFXService);
 
         remoteTradeFutureFXService.setRemoteStaticDataFutureService(remoteStaticDataFutureService);
+        remoteTradeFutureFXService.setConverter(converter);
 
         outputFile = "C:/Rock/Datas/IT/DEV_Datas/tmp/futureFXTradeInfo.csv";
     }

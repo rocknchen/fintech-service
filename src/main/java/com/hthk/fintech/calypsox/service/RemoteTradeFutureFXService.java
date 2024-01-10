@@ -8,6 +8,7 @@ import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
 import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
 import com.hthk.fintech.calypsox.service.basic.AbstractRemoteService;
 import com.hthk.fintech.exception.ServiceInternalException;
+import com.hthk.fintech.fintechservice.converter.impl.FutureFXTradeInfoConverterImpl;
 import com.hthk.fintech.model.data.datacenter.query.EntityTypeEnum;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
@@ -46,8 +47,15 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
     @Autowired
     private RemoteStaticDataFutureService remoteStaticDataFutureService;
 
+    @Autowired
+    private FutureFXTradeInfoConverterImpl converter;
+
     public void setRemoteStaticDataFutureService(RemoteStaticDataFutureService remoteStaticDataFutureService) {
         this.remoteStaticDataFutureService = remoteStaticDataFutureService;
+    }
+
+    public void setConverter(FutureFXTradeInfoConverterImpl converter) {
+        this.converter = converter;
     }
 
     public RemoteTradeFutureFXService() {
@@ -122,44 +130,7 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
     }
 
     private List<FutureFXTradeInfo> convert(List<TradeInfo> tradeInfoList, Map<String, List<FutureInfo>> futureInfoMap) {
-        return tradeInfoList.stream().map(t -> convert(t, futureInfoMap)).collect(Collectors.toList());
-    }
-
-    private FutureFXTradeInfo convert(TradeInfo tradeInfo, Map<String, List<FutureInfo>> futureInfoMap) {
-
-        FutureInfo futureInfo = getFutureInfo(tradeInfo, futureInfoMap);
-
-        FutureFXTradeInfo ti = new FutureFXTradeInfo();
-        ti.setBook(tradeInfo.getBook());
-        ti.setTradeDate(tradeInfo.getTradeDateTime().toLocalDate());
-        ti.setTradeDateTime(tradeInfo.getTradeDateTime());
-//        ti.setBuySell(tradeInfo);
-        ti.setTradeId(tradeInfo.getTradeId());
-        ti.setProductType(tradeInfo.getProductType());
-        ti.setProductSubType(tradeInfo.getProductSubType());
-
-        if (futureInfo == null) {
-            logger.error(LOG_DEFAULT, tradeInfo.getTradeId(), tradeInfo.getFutureUnderlyingTickerExchange());
-        }
-        if (futureInfo != null) {
-            ti.setTickerExchange(futureInfo.getTickerExchange());
-            ti.setBbTickerExchange(futureInfo.getBbTickerExchange());
-        }
-
-        return ti;
-    }
-
-    private FutureInfo getFutureInfo(TradeInfo tradeInfo, Map<String, List<FutureInfo>> futureInfoMap) {
-
-        String productSubType = tradeInfo.getProductSubType();
-        String tickerExchange = tradeInfo.getFutureUnderlyingTickerExchange();
-        List<FutureInfo> futureInfoList = futureInfoMap.get(productSubType);
-        List<FutureInfo> futureInfos = futureInfoList.stream().filter(t -> tickerExchange.equals(t.getTickerExchange())).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(futureInfos)) {
-            return null;
-        } else {
-            return futureInfos.get(0);
-        }
+        return tradeInfoList.stream().map(t -> converter.process(t, futureInfoMap)).collect(Collectors.toList());
     }
 
     private HttpServiceRequest buildRequest(ApplicationInstance source, RequestDateTime dateTime, CriteriaTrade criteria) {

@@ -8,6 +8,7 @@ import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
 import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
 import com.hthk.fintech.calypsox.service.basic.AbstractRemoteService;
 import com.hthk.fintech.exception.ServiceInternalException;
+import com.hthk.fintech.fintechservice.comparator.FutureFXTradeInfoComparator;
 import com.hthk.fintech.fintechservice.converter.impl.FutureFXTradeInfoConverterImpl;
 import com.hthk.fintech.model.data.datacenter.query.EntityTypeEnum;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
@@ -23,10 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
@@ -79,6 +77,7 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
         log(futureInfoMap);
 
         List<FutureFXTradeInfo> futureFXTradeInfoList = convert(tradeInfoList, futureInfoMap);
+        Collections.sort(futureFXTradeInfoList, new FutureFXTradeInfoComparator());
         return futureFXTradeInfoList;
     }
 

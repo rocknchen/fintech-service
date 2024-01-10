@@ -8,6 +8,7 @@ import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
 import com.hthk.fintech.model.trade.TradeInfo;
 import com.hthk.fintech.model.web.http.*;
+import com.hthk.fintech.utils.RemoteServiceUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -33,12 +34,11 @@ public class RemoteTradeServiceTest {
 
     RemoteTradeService remoteTradeService = new RemoteTradeService();
 
+    RemoteStaticDataFutureService remoteStaticDataFutureService = new RemoteStaticDataFutureService();
+
     public RemoteTradeServiceTest() {
-        AppConfig appConfig = new AppConfig();
-        appConfig.setServiceName("services");
-        appConfig.setServiceUrl("http://127.0.0.1");
-        appConfig.setInstanceList(Arrays.asList(ENV_NAME_UAT + ";30087", ENV_NAME_FIRE_FIGHT + ";30129"));
-        remoteTradeService.setFsAppConfig(appConfig);
+        RemoteServiceUtils.setup(remoteTradeService);
+        RemoteServiceUtils.setup(remoteStaticDataFutureService);
     }
 
     @Before
@@ -90,11 +90,16 @@ public class RemoteTradeServiceTest {
             String key = book + ":" + pdType + ":" + pdSubType + ":" + underlying;
             if (!keySet.contains(key)) {
                 keySet.add(key);
+                countMap.put(key, 1);
+            } else {
+                int count = countMap.get(key);
+                countMap.put(key, ++count);
             }
         });
         List<String> keyList = keySet.stream().collect(Collectors.toList());
         Collections.sort(keyList);
-        logger.info(LOG_WRAP, "key", keyList.stream().collect(Collectors.joining("\r\n")));
+        logger.info(LOG_WRAP, "key", keyList.stream().map(t -> t + ":" + countMap.get(t)).collect(Collectors.joining("\r\n")));
     }
+
 
 }

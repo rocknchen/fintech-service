@@ -1,13 +1,11 @@
 package com.hthk.fintech.calypsox.service;
 
-import com.hthk.calypsox.model.staticdata.future.contract.FutureInfo;
 import com.hthk.calypsox.model.staticdata.future.contract.criteria.CriteriaFuture;
 import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
+import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
 import com.hthk.fintech.exception.ServiceInternalException;
-import com.hthk.fintech.fintechservice.config.AppConfig;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
-import com.hthk.fintech.model.trade.TradeInfo;
 import com.hthk.fintech.model.web.http.RequestDateTime;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import com.hthk.fintech.utils.RemoteServiceUtils;
@@ -21,23 +19,29 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_FIRE_FIGHT;
 import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
 import static com.hthk.fintech.config.FintechStaticData.LOG_WRAP;
-import static org.junit.Assert.*;
 
 /**
  * @Author: Rock CHEN
- * @Date: 2024/1/9 20:34
+ * @Date: 2024/1/9 21:16
  */
-public class RemoteStaticDataFutureServiceTest {
+public class RemoteTradeFutureFXServiceTest {
 
-    private final static Logger logger = LoggerFactory.getLogger(RemoteStaticDataFutureServiceTest.class);
+    private final static Logger logger = LoggerFactory.getLogger(RemoteTradeServiceTest.class);
+
+    RemoteTradeService remoteTradeService = new RemoteTradeService();
 
     RemoteStaticDataFutureService remoteStaticDataFutureService = new RemoteStaticDataFutureService();
 
-    public RemoteStaticDataFutureServiceTest() {
+    RemoteTradeFutureFXService remoteTradeFutureFXService = new RemoteTradeFutureFXService();
+
+    public RemoteTradeFutureFXServiceTest() {
+        RemoteServiceUtils.setup(remoteTradeService);
         RemoteServiceUtils.setup(remoteStaticDataFutureService);
+        RemoteServiceUtils.setup(remoteTradeFutureFXService);
+
+        remoteTradeFutureFXService.setRemoteStaticDataFutureService(remoteStaticDataFutureService);
     }
 
     @Before
@@ -45,7 +49,7 @@ public class RemoteStaticDataFutureServiceTest {
     }
 
     @Test
-    public void testGetFuture_UCA() throws ServiceInternalException {
+    public void testGetFutureFXTradeAndOutput() throws ServiceInternalException {
 
         ApplicationInstance instance = new ApplicationInstance();
         instance.setName(ApplicationEnum.CALYPSO);
@@ -55,13 +59,13 @@ public class RemoteStaticDataFutureServiceTest {
         dateTime.setTimeZone("HKT");
         dateTime.setRunDateTime("2023-12-20 14:19:20");
 
-        CriteriaFuture criteria = new CriteriaFuture();
-        criteria.setExchange("HKEX");
-        criteria.setName("UCA");
-        criteria.setCurrency("CNH");
-        criteria.setExpirationStart(LocalDate.parse("2024-01-01", DateTimeFormatter.ISO_DATE));
+        CriteriaTrade criteria = new CriteriaTrade();
+        criteria.setBookList(Arrays.asList("CIFXDH"));
+        criteria.setTradeFilter("HTHK_FICC_MACRO_FXO_TEST_FutureFX");
 
-        List<FutureInfo> futureInfoList = remoteStaticDataFutureService.getFuture(instance, dateTime, criteria);
-        logger.info(LOG_WRAP, "futureInfoList", JacksonUtils.toJsonPrettyTry(futureInfoList));
+        List<FutureFXTradeInfo> futureInfoList = remoteTradeFutureFXService.getTrade(instance, dateTime, criteria);
+        logger.info(LOG_WRAP, "futureInfo 1st", JacksonUtils.toJsonPrettyTry(futureInfoList.get(0)));
     }
+
+
 }

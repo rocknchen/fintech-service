@@ -3,12 +3,12 @@ package com.hthk.fintech.fintechservice.converter.impl;
 import com.hthk.calypsox.model.staticdata.future.contract.FutureInfo;
 import com.hthk.calypsox.model.trade.TradeInfo;
 import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
-import com.hthk.fintech.calypsox.service.RemoteTradeFutureFXService;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,10 +32,23 @@ public class FutureFXTradeInfoConverterImpl {
         ti.setBook(tradeInfo.getBook());
         ti.setTradeDate(tradeInfo.getTradeDateTime().toLocalDate());
         ti.setTradeDateTime(tradeInfo.getTradeDateTime());
-//        ti.setBuySell(tradeInfo);
+
+        ti.setBuySell(tradeInfo.getBuySell());
+        ti.setQuantity(new BigDecimal(tradeInfo.getQuantity()));
+
+        ti.setPrice(tradeInfo.getPrice());
+
         ti.setTradeId(tradeInfo.getTradeId());
         ti.setProductType(tradeInfo.getProductType());
         ti.setProductSubType(tradeInfo.getProductSubType());
+
+        ti.setSettleDate(tradeInfo.getSettlementDate());
+
+        ti.setQuoteName(futureInfo.getQuoteName());
+
+        ti.setFirstTradeDate(futureInfo.getFirstTradeDate());
+        ti.setFirstDeliveryDate(futureInfo.getFirstDeliveryDate());
+        ti.setExpirationDate(futureInfo.getExpirationDate());
 
         if (futureInfo == null) {
             logger.error(LOG_DEFAULT, tradeInfo.getTradeId(), tradeInfo.getFutureUnderlyingTickerExchange());
@@ -46,7 +59,6 @@ public class FutureFXTradeInfoConverterImpl {
         }
 
         return ti;
-
     }
 
     private FutureInfo getFutureInfo(TradeInfo tradeInfo, Map<String, List<FutureInfo>> futureInfoMap) {

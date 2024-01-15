@@ -10,10 +10,12 @@ import com.hthk.fintech.model.web.http.RequestDateTime;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import com.hthk.fintech.utils.CSVUtils;
 import com.hthk.fintech.utils.RemoteServiceUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -52,14 +54,18 @@ public class RemoteCashPositionServiceTest {
         dateTime.setRunDateTime("2023-12-20 14:19:20");
 
         CriteriaCashPosition criteria = new CriteriaCashPosition();
-        criteria.setBookList(Arrays.asList("CIFXDH"));
+        criteria.setBookList(Arrays.asList("CIFXDH_TEST"));
 
         List<CashPositionInfo> cashPositionInfoList = remoteCashPositionService.getCashPosition(instance, dateTime, criteria);
-        logger.info(LOG_WRAP, "cashPositionInfoList 1st", JacksonUtils.toJsonPrettyTry(cashPositionInfoList.get(0)));
+        if (!CollectionUtils.isEmpty(cashPositionInfoList)) {
+            logger.info(LOG_WRAP, "cashPositionInfoList 1st", JacksonUtils.toJsonPrettyTry(cashPositionInfoList.get(0)));
+            Collections.sort(cashPositionInfoList, new CashPositionComparator());
+            CSVUtils.write(cashPositionInfoList, outputFile, "UTF-8", true, CashPositionInfo.class);
+        } else {
+            logger.info("NO position");
+            new File(outputFile).delete();
+        }
 
-        Collections.sort(cashPositionInfoList, new CashPositionComparator());
-
-        CSVUtils.write(cashPositionInfoList, outputFile, "UTF-8", true, CashPositionInfo.class);
     }
 
 

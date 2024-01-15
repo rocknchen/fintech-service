@@ -33,5 +33,5 @@ local:
 application:
   calypso:
     serviceUrl: http://127.0.0.1
-    instanceList: 87v17;30087,129v17;30129
+    instanceList: 87v17;30087,129v17;30129,v17prod;30013
     serviceName: services

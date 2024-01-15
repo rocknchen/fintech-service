@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,11 +41,20 @@ public class RemoteEODQuoteServiceTest {
 
     String outputFile;
 
+    List<String> dateList = new ArrayList<>();
+
     public RemoteEODQuoteServiceTest() {
 
         RemoteServiceUtils.setup(remoteEODQuoteService);
 
-        outputFile = "C:/Rock/Datas/IT/DEV_Datas/tmp/eodQuote.csv";
+        dateList.add("2024-01-08");
+        dateList.add("2024-01-09");
+        dateList.add("2024-01-10");
+        dateList.add("2024-01-11");
+        dateList.add("2024-01-12");
+
+        dateList.add("2024-01-15");
+
     }
 
     @Before
@@ -53,6 +63,21 @@ public class RemoteEODQuoteServiceTest {
 
     @Test
     public void testGetEODQuote_GENERAL() throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        dateList.forEach(
+                t -> {
+                    try {
+                        process(t);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
+    }
+
+    private void process(String date) throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        outputFile = "M:/Prod_Files/" + date + ".csv";
 
         ApplicationInstance instance = new ApplicationInstance();
         instance.setName(ApplicationEnum.CALYPSO);
@@ -67,7 +92,7 @@ public class RemoteEODQuoteServiceTest {
         logger.info("start {}", LocalDateTime.now());
 //        criteria.setDate(LocalDate.parse("2023-01-02", DateTimeFormatter.ISO_DATE));
 //        criteria.setDateList(Arrays.asList(LocalDate.parse("2023-01-03", DateTimeFormatter.ISO_DATE), LocalDate.parse("2023-01-01", DateTimeFormatter.ISO_DATE)));
-        criteria.setDateList(Arrays.asList(LocalDate.parse("2023-01-03", DateTimeFormatter.ISO_DATE)));
+        criteria.setDateList(Arrays.asList(LocalDate.parse(date, DateTimeFormatter.ISO_DATE)));
 //        criteria.setQuoteName("FX.USD.HKD");
 
         List<EODQuote> quoteList = remoteEODQuoteService.getQuote(instance, dateTime, criteria);
@@ -77,6 +102,7 @@ public class RemoteEODQuoteServiceTest {
         logger.info(LOG_WRAP, "1st in list", JacksonUtils.toJsonPrettyTry(quoteList.get(0)));
 
         CSVUtils.write(quoteList, outputFile, "UTF-8", true, EODQuote.class);
+
     }
 
 }

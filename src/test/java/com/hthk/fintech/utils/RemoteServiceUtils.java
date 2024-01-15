@@ -5,8 +5,7 @@ import com.hthk.fintech.fintechservice.config.AppConfig;
 
 import java.util.Arrays;
 
-import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_FIRE_FIGHT;
-import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
+import static com.hthk.calypsox.config.CalypsoStaticData.*;
 
 /**
  * @Author: Rock CHEN
@@ -18,7 +17,7 @@ public class RemoteServiceUtils {
         AppConfig appConfig = new AppConfig();
         appConfig.setServiceName("services");
         appConfig.setServiceUrl("http://127.0.0.1");
-        appConfig.setInstanceList(Arrays.asList(ENV_NAME_UAT + ";30087", ENV_NAME_FIRE_FIGHT + ";30129"));
+        appConfig.setInstanceList(Arrays.asList(ENV_NAME_UAT + ";30087", ENV_NAME_FIRE_FIGHT + ";30129", ENV_NAME_PROD + ";30013"));
         service.setFsAppConfig(appConfig);
     }
 

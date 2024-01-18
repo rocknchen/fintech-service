@@ -1,6 +1,7 @@
 package com.hthk.fintech.calypsox.service;
 
 import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
+import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
 import com.hthk.fintech.exception.ServiceInternalException;
 import com.hthk.fintech.fintechservice.config.AppConfig;
 import com.hthk.fintech.model.data.datacenter.query.EntityTypeEnum;
@@ -8,6 +9,8 @@ import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
 import com.hthk.fintech.model.trade.TradeInfo;
 import com.hthk.fintech.model.web.http.*;
+import com.hthk.fintech.structure.utils.JacksonUtils;
+import com.hthk.fintech.utils.CSVUtils;
 import com.hthk.fintech.utils.RemoteServiceUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -101,5 +106,26 @@ public class RemoteTradeServiceTest {
         logger.info(LOG_WRAP, "key", keyList.stream().map(t -> t + ":" + countMap.get(t)).collect(Collectors.joining("\r\n")));
     }
 
+    @Test
+    public void testGetFxTARF_BY_TRADEFILTER() throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        String outputFile = "C:/Rock/Datas/IT/DEV_Datas/tmp/fxTARF.csv";
+
+        ApplicationInstance instance = new ApplicationInstance();
+        instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance(ENV_NAME_UAT);
+
+        RequestDateTime dateTime = new RequestDateTime();
+        dateTime.setTimeZone("HKT");
+        dateTime.setRunDateTime("2023-12-20 14:19:20");
+
+        CriteriaTrade criteria = new CriteriaTrade();
+        criteria.setTradeFilter("HTHK_FICC_SOP");
+
+        List<TradeInfo> tradeInfoList = remoteTradeService.getTrade(instance, dateTime, criteria);
+        logger.info(LOG_WRAP, "futureInfo 1st", JacksonUtils.toJsonPrettyTry(tradeInfoList.get(0)));
+
+        CSVUtils.write(tradeInfoList, outputFile, "UTF-8", true, FutureFXTradeInfo.class);
+    }
 
 }

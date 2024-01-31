@@ -77,4 +77,25 @@ public class RemoteTradeFutureFXServiceTest {
         CSVUtils.write(futureInfoList, outputFile, "UTF-8", true, FutureFXTradeInfo.class);
     }
 
+    @Test
+    public void testGetFutureFXTradeTestAndOutput() throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        ApplicationInstance instance = new ApplicationInstance();
+        instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance(ENV_NAME_UAT);
+
+        RequestDateTime dateTime = new RequestDateTime();
+        dateTime.setTimeZone("HKT");
+        dateTime.setRunDateTime("2023-12-20 14:19:20");
+
+        CriteriaTrade criteria = new CriteriaTrade();
+//        criteria.setBookList(Arrays.asList("CIFXDH"));
+        criteria.setTradeFilter("HTHK_FICC_MACRO_FXO_TEST_FutureFX_testbook");
+
+        List<FutureFXTradeInfo> futureInfoList = remoteTradeFutureFXService.getTrade(instance, dateTime, criteria);
+        logger.info(LOG_WRAP, "futureInfo 1st", JacksonUtils.toJsonPrettyTry(futureInfoList.get(0)));
+
+        CSVUtils.write(futureInfoList, outputFile, "UTF-8", true, FutureFXTradeInfo.class);
+    }
+
 }

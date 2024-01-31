@@ -70,6 +70,10 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
         HttpResponse<TradeInfoResultSet> tradeInfoResultSetResp = client.call(postUrl, request, TradeInfoResultSet.class);
         TradeInfoResultSet resultSet = JacksonUtils.jsonMapper.convertValue(tradeInfoResultSetResp.getData(), TradeInfoResultSet.class);
         List<TradeInfo> tradeInfoList = resultSet.getList();
+
+        if (CollectionUtils.isEmpty(tradeInfoList)) {
+            return null;
+        }
         Set<String> futureContractNameSet = getFutureContract(tradeInfoList);
         logger.info(LOG_DEFAULT, "futureContractNameSet", futureContractNameSet);
 

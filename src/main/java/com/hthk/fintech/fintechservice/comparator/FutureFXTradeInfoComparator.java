@@ -16,6 +16,15 @@ public class FutureFXTradeInfoComparator implements Comparator<FutureFXTradeInfo
 
         LocalDate settleDate1 = ti1.getSettleDate();
         LocalDate settleDate2 = ti2.getSettleDate();
-        return settleDate1.compareTo(settleDate2);
+
+        String book1 = ti1.getBook();
+        String book2 = ti2.getBook();
+
+        if (book1.equals(book2)) {
+            return settleDate1.compareTo(settleDate2);
+        } else {
+            return book1.compareTo(book2);
+        }
+
     }
 }

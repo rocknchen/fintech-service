@@ -6,6 +6,7 @@ import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -29,7 +30,10 @@ public class FutureFXTradeInfoConverterImpl {
         FutureInfo futureInfo = getFutureInfo(tradeInfo, futureInfoMap);
 
         FutureFXTradeInfo ti = new FutureFXTradeInfo();
+        BeanUtils.copyProperties(tradeInfo, ti);
+
         ti.setBook(tradeInfo.getBook());
+        ti.setCounterParty(tradeInfo.getCounterParty());
         ti.setTradeDate(tradeInfo.getTradeDateTime().toLocalDate());
         ti.setTradeDateTime(tradeInfo.getTradeDateTime());
 

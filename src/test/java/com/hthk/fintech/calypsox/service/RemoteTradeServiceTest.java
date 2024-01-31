@@ -3,6 +3,7 @@ package com.hthk.fintech.calypsox.service;
 import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
 import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
 import com.hthk.fintech.exception.ServiceInternalException;
+import com.hthk.fintech.fintechservice.comparator.BasicTradeInfoComparator;
 import com.hthk.fintech.fintechservice.config.AppConfig;
 import com.hthk.fintech.model.data.datacenter.query.EntityTypeEnum;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
@@ -124,6 +125,8 @@ public class RemoteTradeServiceTest {
 
         List<TradeInfo> tradeInfoList = remoteTradeService.getTrade(instance, dateTime, criteria);
         logger.info(LOG_WRAP, "futureInfo 1st", JacksonUtils.toJsonPrettyTry(tradeInfoList.get(0)));
+
+        Collections.sort(tradeInfoList, new BasicTradeInfoComparator());
 
         CSVUtils.write(tradeInfoList, outputFile, "UTF-8", true, FutureFXTradeInfo.class);
     }

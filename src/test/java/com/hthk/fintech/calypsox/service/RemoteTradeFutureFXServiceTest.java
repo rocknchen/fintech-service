@@ -96,8 +96,10 @@ public class RemoteTradeFutureFXServiceTest {
         CriteriaTrade criteria = new CriteriaTrade();
 //        criteria.setBookList(Arrays.asList("CIFXDH"));
         criteria.setBookBlackList(Arrays.asList(
-                "CIFXDH_TEST", "CIFXDH_TEST_2", "CIFXDH_TEST_3", "CIFXDH_TEST_4", "CIFXDH_TEST_5", "CIFXDH_TEST_6", "CIFXDH_TEST_7", "CIFXDH_TEST_8"
-
+                "CIFXDH_TEST", "CIFXDH_TEST_2", "CIFXDH_TEST_3", "CIFXDH_TEST_4",
+                "CIFXDH_TEST_5", "CIFXDH_TEST_6", "CIFXDH_TEST_7", "CIFXDH_TEST_8",
+                "CIFXDH_TEST_9", "CIFXFI_TEST_9", "CIFXDH_TEST_10", "CIFXFI_TEST_10",
+                "CIFXDH_TEST_11", "CIFXFI_TEST_11", "CIFXDH_TEST_12", "CIFXFI_TEST_12"
         ));
         criteria.setTradeFilter("HTHK_FICC_MACRO_FXO_TEST_FutureFX_testbook");
         criteria.setTradeStatusBlackList(Arrays.asList("CANCELED"));

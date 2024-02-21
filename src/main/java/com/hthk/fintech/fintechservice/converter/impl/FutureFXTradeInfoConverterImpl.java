@@ -41,6 +41,8 @@ public class FutureFXTradeInfoConverterImpl {
         ti.setQuantity(new BigDecimal(tradeInfo.getQuantity()));
         ti.setTradeStatus(tradeInfo.getTradeStatus());
 
+        ti.setEnteredDateTime(tradeInfo.getEnteredDateTime());
+
         ti.setPrice(tradeInfo.getPrice());
 
         ti.setTradeId(tradeInfo.getTradeId());

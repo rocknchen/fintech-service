@@ -20,11 +20,22 @@ public class FutureFXTradeInfoComparator implements Comparator<FutureFXTradeInfo
         String book1 = ti1.getBook();
         String book2 = ti2.getBook();
 
-        if (book1.equals(book2)) {
-            return settleDate1.compareTo(settleDate2);
-        } else {
+        String tickerExchange1 = ti1.getTickerExchange();
+        String tickerExchange2 = ti2.getTickerExchange();
+
+        if (!book1.equals(book2)) {
             return book1.compareTo(book2);
         }
+
+        if (settleDate1.compareTo(settleDate2) != 0) {
+            return settleDate1.compareTo(settleDate2);
+        }
+
+        if (!tickerExchange1.equals(tickerExchange2)) {
+            return tickerExchange1.compareTo(tickerExchange2);
+        }
+
+        return tickerExchange1.compareTo(tickerExchange2);
 
     }
 }

@@ -51,11 +51,13 @@ public class FutureFXTradeInfoConverterImpl {
 
         ti.setSettleDate(tradeInfo.getSettlementDate());
 
-        ti.setQuoteName(futureInfo.getQuoteName());
+        if (futureInfo != null) {
 
-        ti.setFirstTradeDate(futureInfo.getFirstTradeDate());
-        ti.setFirstDeliveryDate(futureInfo.getFirstDeliveryDate());
-        ti.setExpirationDate(futureInfo.getExpirationDate());
+            ti.setQuoteName(futureInfo.getQuoteName());
+            ti.setFirstTradeDate(futureInfo.getFirstTradeDate());
+            ti.setFirstDeliveryDate(futureInfo.getFirstDeliveryDate());
+            ti.setExpirationDate(futureInfo.getExpirationDate());
+        }
 
         if (futureInfo == null) {
             logger.error(LOG_DEFAULT, tradeInfo.getTradeId(), tradeInfo.getFutureUnderlyingTickerExchange());
@@ -73,6 +75,10 @@ public class FutureFXTradeInfoConverterImpl {
         String productSubType = tradeInfo.getProductSubType();
         String tickerExchange = tradeInfo.getFutureUnderlyingTickerExchange();
         List<FutureInfo> futureInfoList = futureInfoMap.get(productSubType);
+        if (futureInfoList == null) {
+            return null;
+        }
+
         List<FutureInfo> futureInfos = futureInfoList.stream().filter(t -> tickerExchange.equals(t.getTickerExchange())).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(futureInfos)) {
             return null;

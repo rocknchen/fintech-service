@@ -31,6 +31,10 @@ public class FutureFXTradeInfoComparator implements Comparator<FutureFXTradeInfo
             return settleDate1.compareTo(settleDate2);
         }
 
+        if (tickerExchange1 == null || tickerExchange2 == null) {
+            return 0;
+        }
+
         if (!tickerExchange1.equals(tickerExchange2)) {
             return tickerExchange1.compareTo(tickerExchange2);
         }

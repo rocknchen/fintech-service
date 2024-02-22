@@ -122,4 +122,31 @@ public class RemoteTradeFutureFXServiceTest {
 
     }
 
+    @Test
+    public void testGetFutureCommTradeAndOutputTest() throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        ApplicationInstance instance = new ApplicationInstance();
+        instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance(ENV_NAME_UAT);
+
+        RequestDateTime dateTime = new RequestDateTime();
+        dateTime.setTimeZone("HKT");
+        dateTime.setRunDateTime("2023-12-20 14:19:20");
+
+        CriteriaTrade criteria = new CriteriaTrade();
+        criteria.setTradeFilter("HTHK_FICC_COMMODITY_IN_2023_Nov_FutureComm");
+        criteria.setTradeStatusBlackList(Arrays.asList("CANCELED"));
+
+        List<FutureFXTradeInfo> futureInfoList = remoteTradeFutureFXService.getTrade(instance, dateTime, criteria);
+        if (!CollectionUtils.isEmpty(futureInfoList)) {
+            logger.info(LOG_WRAP, "futureInfo 1st", JacksonUtils.toJsonPrettyTry(futureInfoList.get(0)));
+
+            Collections.sort(futureInfoList, new FutureFXTradeInfoComparator());
+            CSVUtils.write(futureInfoList, outputFile, "UTF-8", true, FutureFXTradeInfo.class);
+        } else {
+            new File(outputFile).deleteOnExit();
+        }
+
+    }
+
 }

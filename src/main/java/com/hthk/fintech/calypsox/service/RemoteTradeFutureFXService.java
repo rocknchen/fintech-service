@@ -90,6 +90,11 @@ public class RemoteTradeFutureFXService extends AbstractRemoteService {
         Map<String, List<FutureInfo>> map = new HashedMap();
         futureContractNameSet.forEach(name -> {
             String contractInfoStr = contractMap.get(name);
+
+            if (contractInfoStr == null || contractInfoStr.indexOf(",") == -1) {
+                return;
+            }
+
             String exchange = contractInfoStr.split(",")[0];
             String currency = contractInfoStr.split(",")[1];
             try {

@@ -78,7 +78,8 @@ public class RemoteBookServiceTest {
         dateTime.setRunDateTime("2023-12-20 14:19:20");
 
         CriteriaBook criteria = new CriteriaBook();
-        criteria.setNamePreList(Arrays.asList("CIFXDH_TEST", "CIFXFI_TEST", "FUTURE_FX_CASH_POS_POC"));
+        criteria.setLegalEntityList(Arrays.asList("HKFH", "HKCI", "HTIFP", "HTSG"));
+        criteria.setCompanyShortNameList(Arrays.asList("FICC", "TRES"));
 //        criteria.setIdStart(1);
 //        criteria.setIdEnd(30);
 

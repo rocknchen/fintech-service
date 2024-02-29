@@ -2,6 +2,8 @@ package com.hthk.fintech.calypsox.service;
 
 import com.hthk.calypsox.model.staticdata.book.criteria.CriteriaBook;
 import com.hthk.fintech.exception.ServiceInternalException;
+import com.hthk.fintech.fintechservice.comparator.BasicBookInfoComparator;
+import com.hthk.fintech.fintechservice.comparator.BasicTradeInfoComparator;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
 import com.hthk.fintech.model.staticdata.BookInfo;
@@ -18,6 +20,7 @@ import org.springframework.beans.BeanUtils;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,6 +87,8 @@ public class RemoteBookServiceTest {
 //        criteria.setIdEnd(30);
 
         List<BookInfo> bookInfoList = remoteBookService.getBook(instance, dateTime, criteria);
+        Collections.sort(bookInfoList, new BasicBookInfoComparator());
+
         List<BookInfoVO1> bookInfoVO1List = bookInfoList.stream().map(t ->
                 {
                     BookInfoVO1 vo = new BookInfoVO1();

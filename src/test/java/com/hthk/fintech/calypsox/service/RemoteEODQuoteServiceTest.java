@@ -154,6 +154,46 @@ public class RemoteEODQuoteServiceTest {
 
     }
 
+    @Test
+    public void generateEODJPYQuoteDailyDiff() throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        String dateStr = getDateStr();
+        outputFile = "C:/Rock/Datas/IT/DEV_Datas/tmp/EOD_Quote_Daily_Diff_" + dateStr + ".csv";
+        String remoteFolder = "/home/calypso/HTHK_SHARE";
+
+        String endDate = "2024-03-15";
+        String startDate = "2024-03-14";
+
+        String serverIP = "168.64.17.87";
+        String ftpUser = "calypso";
+        String ftpPwd = "App@Admin123";
+
+        ApplicationInstance instance = new ApplicationInstance();
+        instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance(ENV_NAME_UAT);
+
+        RequestDateTime dateTime = new RequestDateTime();
+        dateTime.setTimeZone("HKT");
+        dateTime.setRunDateTime("2023-12-20 14:19:20");
+
+        List<String> quoteNameList = getJPYQuoteNameList();
+
+        CriteriaEODQuote criteria = new CriteriaEODQuote();
+        criteria.setQuoteNameList(quoteNameList);
+        criteria.setDateList(Arrays.asList(
+                LocalDate.parse(startDate, DateTimeFormatter.ISO_DATE), LocalDate.parse(endDate, DateTimeFormatter.ISO_DATE)
+        ));
+
+        List<EODQuote> quoteList = remoteEODQuoteService.getQuote(instance, dateTime, criteria);
+
+        List<EODQuoteCompare> diffList = convert(quoteList);
+        CSVUtils.write(diffList, outputFile, "UTF-8", true, EODQuoteCompare.class);
+
+        logger.info("send to share folder: {} {} {}", new File(outputFile).getName(), remoteFolder, serverIP);
+        ftpService.send(outputFile, remoteFolder, serverIP, ftpUser, ftpPwd);
+
+    }
+
     private List<EODQuoteCompare> convert(List<EODQuote> quoteList) {
 
         List<EODQuoteCompare> allList = new ArrayList<>();
@@ -182,6 +222,71 @@ public class RemoteEODQuoteServiceTest {
         BigDecimal diff = quoteEnd.getClose().subtract(quoteStart.getClose());
 
         return new EODQuoteCompare(quoteName, quoteStart.getQuoteType(), quoteEnd.getClose(), quoteStart.getClose(), diff.toPlainString(), quoteEnd.getDate(), quoteStart.getDate());
+    }
+
+    private List<String> getJPYQuoteNameList() {
+
+        List<String> quoteNameList = new ArrayList<>();
+
+        quoteNameList.add("MM.JPY.TONAR.ON.BOJDTR");
+        quoteNameList.add("Swap.1W.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.2W.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.3W.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.1M.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.2M.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.3M.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.4M.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.5M.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.6M.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.9M.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.1Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.18M.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.2Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.3Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.4Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.5Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.6Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.7Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.8Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.9Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.10Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.12Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.15Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.20Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.25Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.30Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.35Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Swap.40Y.JPY.TONAR.1D/1Y.BOJDTR");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.1W");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.2W");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.3W");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.1M");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.2M");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.3M");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.4M");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.5M");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.6M");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.9M");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.1Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.18M");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.2Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.3Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.4Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.5Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.6Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.7Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.8Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.9Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.10Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.12Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.15Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.20Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.25Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.30Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.35Y");
+        quoteNameList.add("Spread.Swap.LCH_JSCC.40Y");
+
+        return quoteNameList;
     }
 
     private List<String> getQuoteNameList() {

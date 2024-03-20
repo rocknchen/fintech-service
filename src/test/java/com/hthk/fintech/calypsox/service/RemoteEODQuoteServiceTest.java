@@ -3,8 +3,8 @@ package com.hthk.fintech.calypsox.service;
 import com.hthk.calypsox.model.marketdata.quote.eod.EODQuote;
 import com.hthk.calypsox.model.marketdata.quote.eod.EODQuoteCompare;
 import com.hthk.calypsox.model.quote.CriteriaEODQuote;
-import com.hthk.calypsox.model.trade.criteria.CriteriaTrade;
-import com.hthk.calypsox.model.trade.product.FutureFXTradeInfo;
+import com.hthk.common.utils.DateTimeUtils;
+import com.hthk.fintech.exception.InvalidRequestException;
 import com.hthk.fintech.exception.ServiceInternalException;
 import com.hthk.fintech.fintechservice.comparator.EODQuoteComparator;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
@@ -15,7 +15,6 @@ import com.hthk.fintech.service.impl.FTPServiceImpl;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import com.hthk.fintech.utils.CSVUtils;
 import com.hthk.fintech.utils.RemoteServiceUtils;
-import org.apache.commons.net.ftp.FTP;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -29,12 +28,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.spi.CalendarDataProvider;
-import java.util.stream.Collectors;
 
 import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
 import static com.hthk.fintech.config.FintechStaticData.LOG_WRAP;
-import static org.junit.Assert.*;
 
 /**
  * @Author: Rock CHEN
@@ -56,13 +52,13 @@ public class RemoteEODQuoteServiceTest {
 
         RemoteServiceUtils.setup(remoteEODQuoteService);
 
-        dateList.add("2024-01-08");
-        dateList.add("2024-01-09");
-        dateList.add("2024-01-10");
-        dateList.add("2024-01-11");
-        dateList.add("2024-01-12");
-
-        dateList.add("2024-01-15");
+//        dateList.add("2024-01-08");
+//        dateList.add("2024-01-09");
+//        dateList.add("2024-01-10");
+//        dateList.add("2024-01-11");
+//        dateList.add("2024-01-12");
+//
+//        dateList.add("2024-01-15");
 
     }
 
@@ -71,9 +67,15 @@ public class RemoteEODQuoteServiceTest {
     }
 
     @Test
-    public void testGetEODQuote_GENERAL() throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public void testGetEODQuote_GENERAL() throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InvalidRequestException {
 
-        dateList.forEach(
+        String startStr = "2024-03-18";
+        LocalDate today = LocalDate.now();
+
+        LocalDate start = LocalDate.parse(startStr, DateTimeFormatter.ISO_DATE);
+        List<LocalDate> busDateList = DateTimeUtils.generateBusinessDate(start, today, null, null);
+
+        busDateList.forEach(
                 t -> {
                     try {
                         process(t);
@@ -84,9 +86,10 @@ public class RemoteEODQuoteServiceTest {
         );
     }
 
-    private void process(String date) throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    private void process(LocalDate date) throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 
-        outputFile = "M:/Prod_Files/" + date + ".csv";
+        String dateStr = date.format(DateTimeFormatter.ISO_DATE);
+        outputFile = "M:/Prod_Files/MarketData/EODQuote/EODQuote_" + dateStr + ".csv";
 
         ApplicationInstance instance = new ApplicationInstance();
         instance.setName(ApplicationEnum.CALYPSO);
@@ -101,7 +104,7 @@ public class RemoteEODQuoteServiceTest {
         logger.info("start {}", LocalDateTime.now());
 //        criteria.setDate(LocalDate.parse("2023-01-02", DateTimeFormatter.ISO_DATE));
 //        criteria.setDateList(Arrays.asList(LocalDate.parse("2023-01-03", DateTimeFormatter.ISO_DATE), LocalDate.parse("2023-01-01", DateTimeFormatter.ISO_DATE)));
-        criteria.setDateList(Arrays.asList(LocalDate.parse(date, DateTimeFormatter.ISO_DATE)));
+        criteria.setDateList(Arrays.asList(date));
 //        criteria.setQuoteName("FX.USD.HKD");
 
         List<EODQuote> quoteList = remoteEODQuoteService.getQuote(instance, dateTime, criteria);

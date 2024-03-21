@@ -73,8 +73,5 @@ remoteSource:
 
 ftpSyncList:
 
-  - source: cal87_scb_out
-    dest: traiana_income
-
   - source: traiana_ack_result
     dest: cal87_scb_ack_result

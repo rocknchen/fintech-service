@@ -1,5 +1,7 @@
 package com.hthk.fintech.action;
 
+import com.hthk.fintech.exception.InvalidRequestException;
+import com.hthk.fintech.exception.ServiceInternalException;
 import com.hthk.fintech.fintechservice.service.FTPSyncService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,14 +18,14 @@ public class FTPSyncServiceMainEntry {
 
     private final static Logger logger = LoggerFactory.getLogger(FileMigrateMainEntry.class);
 
-    private void process() throws InterruptedException {
+    private void process() throws InterruptedException, InvalidRequestException, ServiceInternalException {
 
         ApplicationContext appContext = new ClassPathXmlApplicationContext(DEFAULT_APP_CONTEXT_FILE);
         FTPSyncService ftpSyncService = appContext.getBean(FTPSyncService.class);
         ftpSyncService.start();
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, InvalidRequestException, ServiceInternalException {
         new FTPSyncServiceMainEntry().process();
     }
 

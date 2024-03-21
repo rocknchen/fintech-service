@@ -92,22 +92,20 @@ public class FTPSyncServiceImpl
             logger.info("send {}", name);
             try {
                 String fileInTmp = download(name, tmpFolder, sourceFolderInfo, connectionMap);
-                //            upload(fileInTmp, destFolderInfo, connectionMap);
-                //            new File(fileInTmp).delete();
+                upload(fileInTmp, destFolderInfo, connectionMap);
+                new File(fileInTmp).delete();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    /**
-     * TODO
-     *
-     * @param fileInTmp
-     * @param destFolderInfo
-     * @param connectionMap
-     */
-    private void upload(String fileInTmp, FTPSourceFolder destFolderInfo, Map<String, FTPConnection> connectionMap) {
+    private void upload(String fileInTmp, FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, IOException, ServiceInternalException {
+
+        String folder = folderInfo.getFolder();
+        FTPConnection connection = getConnect(folderInfo, connectionMap);
+        FTPClientService clientService = getService(connection.getType());
+        clientService.upload(connection, folder, fileInTmp);
     }
 
     private String download(String name, String tmpFolder, FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, IOException, ServiceInternalException {

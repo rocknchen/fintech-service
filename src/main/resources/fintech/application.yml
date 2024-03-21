@@ -64,14 +64,17 @@ remoteSource:
       folder: /opt/calypso/report/SCB/result
 
     - id: traiana_income
-      server: traiana_uat
+      sourceId: traiana_uat
       folder: /Incoming
 
     - id: traiana_ack_result
-      server: traiana_uat
+      sourceId: traiana_uat
       folder: /Outgoing
 
 ftpSyncList:
+
+  - source: cal87_scb_out
+    dest: traiana_income
 
   - source: traiana_ack_result
     dest: cal87_scb_ack_result

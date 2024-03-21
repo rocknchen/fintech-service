@@ -1,6 +1,7 @@
 package com.hthk.fintech.fintechservice.service.impl;
 
 import com.hthk.fintech.config.ApplicationInfo;
+import com.hthk.fintech.enumration.FTPTypeEnum;
 import com.hthk.fintech.exception.InvalidRequestException;
 import com.hthk.fintech.exception.ServiceInternalException;
 import com.hthk.fintech.fintechservice.service.FTPSyncService;
@@ -46,13 +47,23 @@ public class FTPSyncServiceImpl implements FTPSyncService {
     private FTPClientService sftpClientService;
 
     @Override
-    public void start() {
+    public void start() throws InvalidRequestException, ServiceInternalException {
 
         logger.info(LOG_DEFAULT, "FTPSyncService", "start");
 
         Map<String, FTPConnection> connectionMap = build(appInfo);
         logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
+
+        String changeFolder = "/";
+        FTPConnection connection = connectionMap.get("traiana_uat");
+        listFolder(connection, changeFolder);
 //        List<FTPSyncJob> jobList = buildJobList();
+    }
+
+    private void listFolder(FTPConnection connection, String changeFolder) throws InvalidRequestException, ServiceInternalException {
+
+        FTPClientService clientService = getService(connection.getType());
+        clientService.list(connection, changeFolder);
     }
 
     private Map<String, FTPConnection> build(ApplicationInfo appInfo) {
@@ -68,8 +79,8 @@ public class FTPSyncServiceImpl implements FTPSyncService {
         return connectionList.stream().collect(Collectors.toMap(FTPConnection::getId, Function.identity()));
     }
 
-    private FTPClientService getService(FTPSource ftpSource) throws InvalidRequestException {
-        switch (ftpSource.getType()) {
+    private FTPClientService getService(FTPTypeEnum ftpType) throws InvalidRequestException {
+        switch (ftpType) {
             case FTP:
                 return ftpClientService;
             case SFTP:
@@ -82,7 +93,7 @@ public class FTPSyncServiceImpl implements FTPSyncService {
     private FTPConnection connect(FTPSource ftpSource) throws IOException, InvalidRequestException, ServiceInternalException, JSchException {
         FTPConnection conn = new FTPConnection();
         BeanUtils.copyProperties(ftpSource, conn);
-        FTPClientService clientService = getService(ftpSource);
+        FTPClientService clientService = getService(ftpSource.getType());
         logger.info(LOG_DEFAULT, "connect", ftpSource.getId());
         return clientService.connect(ftpSource);
     }

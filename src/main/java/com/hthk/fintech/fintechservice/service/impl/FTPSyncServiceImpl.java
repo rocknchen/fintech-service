@@ -1,5 +1,6 @@
 package com.hthk.fintech.fintechservice.service.impl;
 
+import com.hthk.fintech.config.AppConfig;
 import com.hthk.fintech.config.ApplicationInfo;
 import com.hthk.fintech.enumration.FTPTypeEnum;
 import com.hthk.fintech.exception.InvalidRequestException;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +46,9 @@ public class FTPSyncServiceImpl
 
     @Autowired
     private ApplicationInfo appInfo;
+
+    @Autowired
+    private AppConfig appConfig;
 
     @Override
     public void start(boolean loop) throws InvalidRequestException, ServiceInternalException, InterruptedException {
@@ -77,14 +83,51 @@ public class FTPSyncServiceImpl
         List<String> newFileNameList = srcFileNameList.stream().filter(name -> !destFileNameList.contains(name)).collect(Collectors.toList());
         logger.info("{}\r\n{} {}", "copy(new) list", Optional.ofNullable(newFileNameList).map(List::size).orElse(0), newFileNameList);
 
+        if (CollectionUtils.isEmpty(newFileNameList)) {
+            return;
+        }
+
+        String tmpFolder = appConfig.getTmpFolder();
+        newFileNameList.forEach(name -> {
+            logger.info("send {}", name);
+            try {
+                String fileInTmp = download(name, tmpFolder, sourceFolderInfo, connectionMap);
+                //            upload(fileInTmp, destFolderInfo, connectionMap);
+                //            new File(fileInTmp).delete();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /**
+     * TODO
+     *
+     * @param fileInTmp
+     * @param destFolderInfo
+     * @param connectionMap
+     */
+    private void upload(String fileInTmp, FTPSourceFolder destFolderInfo, Map<String, FTPConnection> connectionMap) {
+    }
+
+    private String download(String name, String tmpFolder, FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, IOException, ServiceInternalException {
+
+        String folder = folderInfo.getFolder();
+        FTPConnection connection = getConnect(folderInfo, connectionMap);
+        FTPClientService clientService = getService(connection.getType());
+        return clientService.download(connection, folder, name, tmpFolder);
     }
 
     private List<String> getFileNameList(FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, ServiceInternalException, IOException {
 
-        String sourceId = folderInfo.getSourceId();
         String folder = folderInfo.getFolder();
-        FTPConnection connection = connectionMap.get(sourceId);
+        FTPConnection connection = getConnect(folderInfo, connectionMap);
         return listFolder(connection, folder);
+    }
+
+    private FTPConnection getConnect(FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) {
+        String sourceId = folderInfo.getSourceId();
+        return connectionMap.get(sourceId);
     }
 
     private void start(boolean loop, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InterruptedException {

@@ -60,10 +60,10 @@ remoteSource:
       folder: /opt/calypso/report/SCB/result
     - id: traiana_income
       server: traiana_uat
-      folder: /INCOME
+      folder: /Incoming
     - id: traiana_ack_result
       server: traiana_uat
-      folder: /OUTPUT
+      folder: /Outgoing
 
 ftpSyncList:
   - source: cal87_scb_out

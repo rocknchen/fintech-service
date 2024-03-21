@@ -54,7 +54,7 @@ public class FTPSyncServiceImpl implements FTPSyncService {
         Map<String, FTPConnection> connectionMap = build(appInfo);
         logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
 
-        String changeFolder = "/";
+        String changeFolder = "/Incoming";
         FTPConnection connection = connectionMap.get("traiana_uat");
         listFolder(connection, changeFolder);
 //        List<FTPSyncJob> jobList = buildJobList();

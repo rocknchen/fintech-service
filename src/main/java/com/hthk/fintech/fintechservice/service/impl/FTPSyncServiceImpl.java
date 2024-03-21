@@ -9,6 +9,7 @@ import com.hthk.fintech.fintechservice.service.basic.AbstractFTPService;
 import com.hthk.fintech.model.net.ftp.FTPConnection;
 import com.hthk.fintech.model.net.ftp.FTPSource;
 import com.hthk.fintech.model.net.ftp.FTPSourceFolder;
+import com.hthk.fintech.model.net.network.SyncInfo;
 import com.hthk.fintech.service.FTPClientService;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import com.jcraft.jsch.JSchException;
@@ -16,10 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,7 @@ public class FTPSyncServiceImpl
     private ApplicationInfo appInfo;
 
     @Override
-    public void start() throws InvalidRequestException, ServiceInternalException {
+    public void start(boolean loop) throws InvalidRequestException, ServiceInternalException, InterruptedException {
 
         logger.info(LOG_DEFAULT, "FTPSyncService", "start");
 
@@ -53,16 +52,57 @@ public class FTPSyncServiceImpl
         logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
 
         Map<String, FTPSourceFolder> ftpSourceMap = buildFTPSourceMap(appInfo);
-        logger.info(LOG_WRAP, "ftpSourceMap", ftpSourceMap);
 
-        String changeFolder = "/Outgoing";
-        FTPConnection connection = connectionMap.get("traiana_uat");
-//        List<FTPSyncJob> jobList = buildJobList();
+        List<SyncInfo> ftpSyncList = appInfo.getFtpSyncList();
+
+        start(loop, ftpSyncList, ftpSourceMap, connectionMap);
+
     }
 
-    private void listFolder(FTPConnection connection, String changeFolder) throws InvalidRequestException, ServiceInternalException {
+    private void process(SyncInfo syncInfo, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, ServiceInternalException, IOException {
+
+        String sourceId = syncInfo.getSource();
+        String destId = syncInfo.getDest();
+
+        FTPSourceFolder sourceFolderInfo = ftpSourceMap.get(sourceId);
+        FTPSourceFolder destFolderInfo = ftpSourceMap.get(destId);
+
+        List<String> srcFileNameList = getFileNameList(sourceFolderInfo, connectionMap);
+        logger.info(LOG_WRAP, "srcFileNameList", srcFileNameList);
+    }
+
+    private List<String> getFileNameList(FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, ServiceInternalException, IOException {
+
+        String sourceId = folderInfo.getSourceId();
+        String folder = folderInfo.getFolder();
+        FTPConnection connection = connectionMap.get(sourceId);
+        return listFolder(connection, folder);
+    }
+
+    private void start(boolean loop, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InterruptedException {
+        if (loop) {
+            while (true) {
+                process(ftpSyncList, ftpSourceMap, connectionMap);
+                Thread.sleep(1000 * 10);
+            }
+        } else {
+            process(ftpSyncList, ftpSourceMap, connectionMap);
+        }
+    }
+
+    private void process(List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) {
+        ftpSyncList.stream().forEach(t -> {
+            try {
+                process(t, ftpSourceMap, connectionMap);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private List<String> listFolder(FTPConnection connection, String changeFolder) throws InvalidRequestException, ServiceInternalException, IOException {
         FTPClientService clientService = getService(connection.getType());
-        clientService.list(connection, changeFolder);
+        return clientService.list(connection, changeFolder);
     }
 
     private Map<String, FTPSourceFolder> buildFTPSourceMap(ApplicationInfo appInfo) {

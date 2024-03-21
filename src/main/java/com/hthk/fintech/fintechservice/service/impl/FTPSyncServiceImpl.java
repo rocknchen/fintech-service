@@ -5,8 +5,10 @@ import com.hthk.fintech.enumration.FTPTypeEnum;
 import com.hthk.fintech.exception.InvalidRequestException;
 import com.hthk.fintech.exception.ServiceInternalException;
 import com.hthk.fintech.fintechservice.service.FTPSyncService;
+import com.hthk.fintech.fintechservice.service.basic.AbstractFTPService;
 import com.hthk.fintech.model.net.ftp.FTPConnection;
 import com.hthk.fintech.model.net.ftp.FTPSource;
+import com.hthk.fintech.model.net.ftp.FTPSourceFolder;
 import com.hthk.fintech.service.FTPClientService;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import com.jcraft.jsch.JSchException;
@@ -31,20 +33,16 @@ import static com.hthk.fintech.config.FintechStaticData.*;
  * @Date: 2024/3/21 13:29
  */
 @Component
-public class FTPSyncServiceImpl implements FTPSyncService {
+public class FTPSyncServiceImpl
+
+        extends AbstractFTPService
+
+        implements FTPSyncService {
 
     private final static Logger logger = LoggerFactory.getLogger(FTPSyncServiceImpl.class);
 
     @Autowired
     private ApplicationInfo appInfo;
-
-    @Qualifier
-    @Resource(name = "ftpService")
-    private FTPClientService ftpClientService;
-
-    @Qualifier
-    @Resource(name = "sftpService")
-    private FTPClientService sftpClientService;
 
     @Override
     public void start() throws InvalidRequestException, ServiceInternalException {
@@ -54,16 +52,22 @@ public class FTPSyncServiceImpl implements FTPSyncService {
         Map<String, FTPConnection> connectionMap = build(appInfo);
         logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
 
+        Map<String, FTPSourceFolder> ftpSourceMap = buildFTPSourceMap(appInfo);
+        logger.info(LOG_WRAP, "ftpSourceMap", ftpSourceMap);
+
         String changeFolder = "/Outgoing";
         FTPConnection connection = connectionMap.get("traiana_uat");
-        listFolder(connection, changeFolder);
 //        List<FTPSyncJob> jobList = buildJobList();
     }
 
     private void listFolder(FTPConnection connection, String changeFolder) throws InvalidRequestException, ServiceInternalException {
-
         FTPClientService clientService = getService(connection.getType());
         clientService.list(connection, changeFolder);
+    }
+
+    private Map<String, FTPSourceFolder> buildFTPSourceMap(ApplicationInfo appInfo) {
+        List<FTPSourceFolder> ftpFolderList = appInfo.getRemoteSource().getFtpFolderList();
+        return ftpFolderList.stream().collect(Collectors.toMap(FTPSourceFolder::getId, Function.identity()));
     }
 
     private Map<String, FTPConnection> build(ApplicationInfo appInfo) {

@@ -68,7 +68,14 @@ public class FTPSyncServiceImpl
         FTPSourceFolder destFolderInfo = ftpSourceMap.get(destId);
 
         List<String> srcFileNameList = getFileNameList(sourceFolderInfo, connectionMap);
-        logger.info(LOG_WRAP, "srcFileNameList", srcFileNameList);
+        logger.info("{} {} {}\r\n{}", "source list", sourceId, sourceFolderInfo.getFolder(), srcFileNameList);
+
+        List<String> destFileNameList = getFileNameList(destFolderInfo, connectionMap);
+        logger.info("{} {} {}\r\n{}", "dest list", destId, destFolderInfo.getFolder(), destFileNameList);
+
+        List<String> newFileNameList = srcFileNameList.stream().filter(name -> !destFileNameList.contains(name)).collect(Collectors.toList());
+        logger.info("{}\r\n{}", "copy(new) list", newFileNameList);
+
     }
 
     private List<String> getFileNameList(FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, ServiceInternalException, IOException {

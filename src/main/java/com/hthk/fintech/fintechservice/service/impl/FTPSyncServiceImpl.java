@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -68,13 +69,13 @@ public class FTPSyncServiceImpl
         FTPSourceFolder destFolderInfo = ftpSourceMap.get(destId);
 
         List<String> srcFileNameList = getFileNameList(sourceFolderInfo, connectionMap);
-        logger.info("{} {} {}\r\n{}", "source list", sourceId, sourceFolderInfo.getFolder(), srcFileNameList);
+        logger.info("{}: {} {} {}\r\n{}", "source list", sourceId, sourceFolderInfo.getFolder(), Optional.ofNullable(srcFileNameList).map(List::size).orElse(0), srcFileNameList);
 
         List<String> destFileNameList = getFileNameList(destFolderInfo, connectionMap);
-        logger.info("{} {} {}\r\n{}", "dest list", destId, destFolderInfo.getFolder(), destFileNameList);
+        logger.info("{}: {} {} {}\r\n{}", "dest list", destId, destFolderInfo.getFolder(), Optional.ofNullable(destFileNameList).map(List::size).orElse(0), destFileNameList);
 
         List<String> newFileNameList = srcFileNameList.stream().filter(name -> !destFileNameList.contains(name)).collect(Collectors.toList());
-        logger.info("{}\r\n{}", "copy(new) list", newFileNameList);
+        logger.info("{}\r\n{} {}", "copy(new) list", Optional.ofNullable(newFileNameList).map(List::size).orElse(0), newFileNameList);
 
     }
 

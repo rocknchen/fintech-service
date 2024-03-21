@@ -35,3 +35,38 @@ application:
     serviceUrl: http://127.0.0.1
     instanceList: 87v17;30087,129v17;30129,v17prod;30013
     serviceName: services
+
+ftpSourceList:
+  - id: cal87_calypso
+    type: FTP
+    server: 168.64.17.87
+    port: 21
+    user: calypso
+    pwd: App@Admin123
+  - id: traiana_uat
+    type: SFTP
+    server: 199.201.113.151
+    port: 22
+    user: arch.tst.huatai
+    pwd: MpfmgnQxss3u
+
+remoteSource:
+  ftpFolderList:
+    - id: cal87_scb_out
+      sourceId: cal87_calypso
+      folder: /opt/calypso/report/SCB
+    - id: cal87_scb_ack_result
+      sourceId: cal87_calypso
+      folder: /opt/calypso/report/SCB/result
+    - id: traiana_income
+      server: traiana_uat
+      folder: /INCOME
+    - id: traiana_ack_result
+      server: traiana_uat
+      folder: /OUTPUT
+
+ftpSyncList:
+  - source: cal87_scb_out
+    dest: traiana_income
+  - source: traiana_ack_result
+    dest: cal87_scb_ack_result

@@ -47,7 +47,7 @@ ftpSourceList:
 
   - id: traiana_uat
     type: SFTP
-    server: ftp-r3-uat.traiana.com
+    server: 199.201.113.151
     port: 22
     user: arch.tst.huatai
     pwd: MpfmgnQxss3u

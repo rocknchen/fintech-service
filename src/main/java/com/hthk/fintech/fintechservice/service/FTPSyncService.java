@@ -9,5 +9,5 @@ import com.hthk.fintech.exception.ServiceInternalException;
  */
 public interface FTPSyncService {
 
-    void start(boolean loop) throws InvalidRequestException, ServiceInternalException, InterruptedException;
+    void start(boolean loop, int sleepSec) throws InvalidRequestException, ServiceInternalException, InterruptedException;
 }

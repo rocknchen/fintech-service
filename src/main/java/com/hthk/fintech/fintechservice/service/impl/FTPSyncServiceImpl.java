@@ -52,7 +52,7 @@ public class FTPSyncServiceImpl
     private AppConfig appConfig;
 
     @Override
-    public void start(boolean loop) throws InvalidRequestException, ServiceInternalException, InterruptedException {
+    public void start(boolean loop, int sleepSec) throws InvalidRequestException, ServiceInternalException, InterruptedException {
 
         logger.info(LOG_DEFAULT, "FTPSyncService", "start");
 
@@ -63,7 +63,7 @@ public class FTPSyncServiceImpl
 
         List<SyncInfo> ftpSyncList = appInfo.getFtpSyncList();
 
-        start(loop, ftpSyncList, ftpSourceMap, connectionMap);
+        start(loop, sleepSec, ftpSyncList, ftpSourceMap, connectionMap);
 
     }
 
@@ -160,11 +160,11 @@ public class FTPSyncServiceImpl
         return connectionMap.get(sourceId);
     }
 
-    private void start(boolean loop, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InterruptedException {
+    private void start(boolean loop, int sleepSec, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InterruptedException {
         if (loop) {
             while (true) {
                 process(ftpSyncList, ftpSourceMap, connectionMap);
-                Thread.sleep(1000 * 10);
+                Thread.sleep(1000 * sleepSec);
             }
         } else {
             process(ftpSyncList, ftpSourceMap, connectionMap);

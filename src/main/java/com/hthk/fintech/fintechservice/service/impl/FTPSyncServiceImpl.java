@@ -14,6 +14,7 @@ import com.hthk.fintech.model.net.network.SyncInfo;
 import com.hthk.fintech.service.FTPClientService;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.SftpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -66,13 +67,16 @@ public class FTPSyncServiceImpl
 
     }
 
-    private void process(SyncInfo syncInfo, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, ServiceInternalException, IOException {
+    private void process(SyncInfo syncInfo, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, ServiceInternalException, IOException, JSchException, SftpException {
 
         String sourceId = syncInfo.getSource();
         String destId = syncInfo.getDest();
 
         FTPSourceFolder sourceFolderInfo = ftpSourceMap.get(sourceId);
         FTPSourceFolder destFolderInfo = ftpSourceMap.get(destId);
+
+        before(sourceFolderInfo, connectionMap);
+        before(destFolderInfo, connectionMap);
 
         List<String> srcFileNameList = getFileNameList(sourceFolderInfo, connectionMap);
         logger.info("{}: {} {} {}\r\n{}", "source list", sourceId, sourceFolderInfo.getFolder(), Optional.ofNullable(srcFileNameList).map(List::size).orElse(0), srcFileNameList);
@@ -88,16 +92,44 @@ public class FTPSyncServiceImpl
         }
 
         String tmpFolder = appConfig.getTmpFolder();
+
         newFileNameList.forEach(name -> {
             logger.info("send {}", name);
             try {
                 String fileInTmp = download(name, tmpFolder, sourceFolderInfo, connectionMap);
                 upload(fileInTmp, destFolderInfo, connectionMap);
+                if (syncInfo.isBackup()) {
+                    move(name, syncInfo, sourceFolderInfo, connectionMap);
+                }
                 new File(fileInTmp).delete();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
+
+        after(sourceFolderInfo, connectionMap);
+        after(destFolderInfo, connectionMap);
+    }
+
+    private void move(String name, SyncInfo syncInfo, FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, IOException {
+
+        FTPConnection connection = getConnect(folderInfo, connectionMap);
+        FTPClientService clientService = getService(connection.getType());
+        clientService.move(connection, folderInfo.getFolder() + "/" + name, syncInfo.getBackup());
+    }
+
+    private void after(FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException {
+
+        FTPConnection connection = getConnect(folderInfo, connectionMap);
+        FTPClientService clientService = getService(connection.getType());
+        clientService.after(connection);
+    }
+
+    private void before(FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, JSchException, SftpException {
+
+        FTPConnection connection = getConnect(folderInfo, connectionMap);
+        FTPClientService clientService = getService(connection.getType());
+        clientService.before(connection);
     }
 
     private void upload(String fileInTmp, FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, IOException, ServiceInternalException {

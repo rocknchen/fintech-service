@@ -56,14 +56,11 @@ public class FTPSyncServiceImpl
 
         logger.info(LOG_DEFAULT, "FTPSyncService", "start");
 
-        Map<String, FTPConnection> connectionMap = build(appInfo);
-        logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
-
         Map<String, FTPSourceFolder> ftpSourceMap = buildFTPSourceMap(appInfo);
 
         List<SyncInfo> ftpSyncList = appInfo.getFtpSyncList();
 
-        start(loop, sleepSec, ftpSyncList, ftpSourceMap, connectionMap);
+        start(loop, sleepSec, ftpSyncList, ftpSourceMap);
 
     }
 
@@ -118,7 +115,7 @@ public class FTPSyncServiceImpl
         clientService.move(connection, folderInfo.getFolder() + "/" + name, syncInfo.getBackup());
     }
 
-    private void after(FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException {
+    private void after(FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, IOException {
 
         FTPConnection connection = getConnect(folderInfo, connectionMap);
         FTPClientService clientService = getService(connection.getType());
@@ -160,13 +157,22 @@ public class FTPSyncServiceImpl
         return connectionMap.get(sourceId);
     }
 
-    private void start(boolean loop, int sleepSec, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InterruptedException {
+    private void start(boolean loop, int sleepSec, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap) throws InterruptedException {
+
         if (loop) {
             while (true) {
+
+                Map<String, FTPConnection> connectionMap = build(appInfo);
+                logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
+
                 process(ftpSyncList, ftpSourceMap, connectionMap);
                 Thread.sleep(1000 * sleepSec);
             }
         } else {
+
+            Map<String, FTPConnection> connectionMap = build(appInfo);
+            logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
+
             process(ftpSyncList, ftpSourceMap, connectionMap);
         }
     }

@@ -22,7 +22,7 @@ public class FTPSyncServiceMainEntry {
 
         ApplicationContext appContext = new ClassPathXmlApplicationContext(DEFAULT_APP_CONTEXT_FILE);
         FTPSyncService ftpSyncService = appContext.getBean(FTPSyncService.class);
-        ftpSyncService.start(false);
+        ftpSyncService.start(true);
     }
 
     public static void main(String[] args) throws InterruptedException, InvalidRequestException, ServiceInternalException {

@@ -38,9 +38,9 @@ application:
 
 ftpSourceList:
 
-  - id: cal87_calypso
+  - id: cal129_calypso
     type: FTP
-    server: 168.64.17.87
+    server: 168.64.37.129
     port: 21
     user: calypso
     pwd: App@Admin123
@@ -55,12 +55,12 @@ ftpSourceList:
 remoteSource:
   ftpFolderList:
 
-    - id: cal87_scb_out
-      sourceId: cal87_calypso
+    - id: cal129_scb_out
+      sourceId: cal129_calypso
       folder: /opt/calypso/report/SCB
 
-    - id: cal87_scb_ack_result
-      sourceId: cal87_calypso
+    - id: cal129_scb_ack_result
+      sourceId: cal129_calypso
       folder: /opt/calypso/report/SCB/result
 
     - id: traiana_income
@@ -73,9 +73,9 @@ remoteSource:
 
 ftpSyncList:
 
-  - source: cal87_scb_out
+  - source: cal129_scb_out
     dest: traiana_income
     backup: /opt/calypso/report/SCB/backup
 
   - source: traiana_ack_result
-    dest: cal87_scb_ack_result
+    dest: cal129_scb_ack_result

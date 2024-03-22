@@ -73,6 +73,5 @@ remoteSource:
 
 ftpSyncList:
 
-  - source: cal87_scb_out
-    dest: traiana_income
-    backup: /opt/calypso/report/SCB/backup
+  - source: traiana_ack_result
+    dest: cal87_scb_ack_result

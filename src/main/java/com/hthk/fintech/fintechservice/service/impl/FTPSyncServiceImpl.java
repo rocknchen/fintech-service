@@ -162,10 +162,13 @@ public class FTPSyncServiceImpl
         if (loop) {
             while (true) {
 
-                Map<String, FTPConnection> connectionMap = build(appInfo);
-                logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
-
-                process(ftpSyncList, ftpSourceMap, connectionMap);
+                try {
+                    Map<String, FTPConnection> connectionMap = build(appInfo);
+                    logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
+                    process(ftpSyncList, ftpSourceMap, connectionMap);
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
                 Thread.sleep(1000 * sleepSec);
             }
         } else {

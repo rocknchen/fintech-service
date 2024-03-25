@@ -79,3 +79,5 @@ ftpSyncList:
 
   - source: traiana_ack_result
     dest: cal129_scb_ack_result
+    sendEmail: true
+    subject: Traiana_SCB_PB(UAT)_GIVE_UP_TRADE

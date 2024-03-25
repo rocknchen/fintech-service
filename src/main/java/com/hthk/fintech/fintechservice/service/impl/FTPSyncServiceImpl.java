@@ -1,5 +1,7 @@
 package com.hthk.fintech.fintechservice.service.impl;
 
+import com.hthk.common.internet.email.service.EmailService;
+import com.hthk.common.model.Internet.message.email.MessageEmail;
 import com.hthk.fintech.config.AppConfig;
 import com.hthk.fintech.config.ApplicationInfo;
 import com.hthk.fintech.enumration.FTPTypeEnum;
@@ -24,9 +26,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -50,6 +50,9 @@ public class FTPSyncServiceImpl
 
     @Autowired
     private AppConfig appConfig;
+
+    @Autowired
+    private EmailService emailService;
 
     @Override
     public void start(boolean loop, int sleepSec) throws InvalidRequestException, ServiceInternalException, InterruptedException {
@@ -98,6 +101,10 @@ public class FTPSyncServiceImpl
                 if (syncInfo.isBackup()) {
                     move(name, syncInfo, sourceFolderInfo, connectionMap);
                 }
+                if (syncInfo.getSendEmail() != null && syncInfo.getSendEmail() == true) {
+                    MessageEmail msg = buildMsg(name, tmpFolder, syncInfo.getSubject());
+                    emailService.send(msg);
+                }
                 new File(fileInTmp).delete();
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -106,6 +113,15 @@ public class FTPSyncServiceImpl
 
         after(sourceFolderInfo, connectionMap);
         after(destFolderInfo, connectionMap);
+    }
+
+    private MessageEmail buildMsg(String name, String tmpFolder, String subject) {
+        MessageEmail email = new MessageEmail();
+        email.setTitle(subject);
+        email.setReceiverList(Arrays.asList("rockchen@htsc.com"));
+        email.setAttachmentList(Arrays.asList(tmpFolder + "/" + name));
+        email.setSign("SCB Test User");
+        return email;
     }
 
     private void move(String name, SyncInfo syncInfo, FTPSourceFolder folderInfo, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, IOException {

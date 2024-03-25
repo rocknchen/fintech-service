@@ -21,7 +21,7 @@ public class FTPSyncServiceMainEntry {
     private void process() throws InterruptedException, InvalidRequestException, ServiceInternalException {
 
         boolean isLoop = true;
-        int sleepSec = 60 * 5;
+        int sleepSec = 60 * 2;
 
         ApplicationContext appContext = new ClassPathXmlApplicationContext(DEFAULT_APP_CONTEXT_FILE);
         FTPSyncService ftpSyncService = appContext.getBean(FTPSyncService.class);

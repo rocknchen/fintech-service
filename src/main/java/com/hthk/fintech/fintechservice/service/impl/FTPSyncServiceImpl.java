@@ -2,6 +2,7 @@ package com.hthk.fintech.fintechservice.service.impl;
 
 import com.hthk.common.internet.email.service.EmailService;
 import com.hthk.common.model.Internet.message.email.MessageEmail;
+import com.hthk.common.utils.FileUtils;
 import com.hthk.fintech.config.AppConfig;
 import com.hthk.fintech.config.ApplicationInfo;
 import com.hthk.fintech.enumration.FTPTypeEnum;
@@ -12,6 +13,7 @@ import com.hthk.fintech.fintechservice.service.basic.AbstractFTPService;
 import com.hthk.fintech.model.net.ftp.FTPConnection;
 import com.hthk.fintech.model.net.ftp.FTPSource;
 import com.hthk.fintech.model.net.ftp.FTPSourceFolder;
+import com.hthk.fintech.model.net.network.EmailInfo;
 import com.hthk.fintech.model.net.network.SyncInfo;
 import com.hthk.fintech.service.FTPClientService;
 import com.hthk.fintech.structure.utils.JacksonUtils;
@@ -62,12 +64,13 @@ public class FTPSyncServiceImpl
         Map<String, FTPSourceFolder> ftpSourceMap = buildFTPSourceMap(appInfo);
 
         List<SyncInfo> ftpSyncList = appInfo.getFtpSyncList();
+        Map<String, List<String>> emailMap = buildEmailMap(appInfo);
 
-        start(loop, sleepSec, ftpSyncList, ftpSourceMap);
+        start(loop, sleepSec, ftpSyncList, ftpSourceMap, emailMap);
 
     }
 
-    private void process(SyncInfo syncInfo, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) throws InvalidRequestException, ServiceInternalException, IOException, JSchException, SftpException {
+    private void process(SyncInfo syncInfo, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap, Map<String, List<String>> emailMap) throws InvalidRequestException, ServiceInternalException, IOException, JSchException, SftpException {
 
         String sourceId = syncInfo.getSource();
         String destId = syncInfo.getDest();
@@ -102,7 +105,9 @@ public class FTPSyncServiceImpl
                     move(name, syncInfo, sourceFolderInfo, connectionMap);
                 }
                 if (syncInfo.getSendEmail() != null && syncInfo.getSendEmail() == true) {
-                    MessageEmail msg = buildMsg(name, tmpFolder, syncInfo.getSubject());
+                    List<String> recList = buildList(syncInfo.getEmailReceiveList(), emailMap);
+                    List<String> ccList = buildList(syncInfo.getEmailCCList(), emailMap);
+                    MessageEmail msg = buildMsg(name, tmpFolder, syncInfo.getSubject(), recList, ccList);
                     emailService.send(msg);
                 }
                 new File(fileInTmp).delete();
@@ -115,11 +120,33 @@ public class FTPSyncServiceImpl
         after(destFolderInfo, connectionMap);
     }
 
-    private MessageEmail buildMsg(String name, String tmpFolder, String subject) {
+    private List<String> buildList(List<String> emailReceiveList, Map<String, List<String>> emailMap) {
+        List<String> list = new ArrayList<>();
+        emailReceiveList.forEach(t -> {
+            List<String> subList = emailMap.get(t);
+            list.addAll(subList);
+        });
+        return list;
+    }
+
+    private Map<String, List<String>> buildEmailMap(ApplicationInfo appInfo) {
+
+        List<EmailInfo> emailList = appInfo.getEmailList();
+        Map<String, String> origMap = emailList.stream().collect(Collectors.toMap(EmailInfo::getName, EmailInfo::getList));
+        Map<String, List<String>> emailMap = new HashMap<>();
+        origMap.forEach((k, v) -> emailMap.put(k, Arrays.stream(v.split(",")).map(t -> t.trim()).collect(Collectors.toList())));
+        return emailMap;
+    }
+
+    private MessageEmail buildMsg(String name, String tmpFolder, String subject, List<String> recList, List<String> ccList) {
         MessageEmail email = new MessageEmail();
         email.setTitle(subject);
-        email.setReceiverList(Arrays.asList("rockchen@htsc.com"));
-        email.setAttachmentList(Arrays.asList(tmpFolder + "/" + name));
+        String srcFile = tmpFolder + "/" + name;
+        String content = FileUtils.readResourceAsStr(new File(srcFile), true);
+        email.setContent(content);
+        email.setReceiverList(recList);
+        email.setCcList(ccList);
+        email.setAttachmentList(Arrays.asList(srcFile));
         email.setSign("SCB Test User");
         return email;
     }
@@ -173,7 +200,7 @@ public class FTPSyncServiceImpl
         return connectionMap.get(sourceId);
     }
 
-    private void start(boolean loop, int sleepSec, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap) throws InterruptedException {
+    private void start(boolean loop, int sleepSec, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, List<String>> emailMap) throws InterruptedException {
 
         if (loop) {
             while (true) {
@@ -181,7 +208,7 @@ public class FTPSyncServiceImpl
                 try {
                     Map<String, FTPConnection> connectionMap = build(appInfo);
                     logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
-                    process(ftpSyncList, ftpSourceMap, connectionMap);
+                    process(ftpSyncList, ftpSourceMap, connectionMap, emailMap);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
@@ -192,14 +219,14 @@ public class FTPSyncServiceImpl
             Map<String, FTPConnection> connectionMap = build(appInfo);
             logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
 
-            process(ftpSyncList, ftpSourceMap, connectionMap);
+            process(ftpSyncList, ftpSourceMap, connectionMap, emailMap);
         }
     }
 
-    private void process(List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) {
+    private void process(List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap, Map<String, List<String>> emailMap) {
         ftpSyncList.stream().forEach(t -> {
             try {
-                process(t, ftpSourceMap, connectionMap);
+                process(t, ftpSourceMap, connectionMap, emailMap);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

@@ -81,3 +81,18 @@ ftpSyncList:
     dest: cal129_scb_ack_result
     sendEmail: true
     subject: Traiana_SCB_PB(UAT)_GIVE_UP_TRADE
+    emailReceiveList:
+      - group1
+      - group4
+    emailCCList:
+      - group4
+
+emailList:
+  - name: group1
+    list: rockchen@htsc.com
+  - name: group2
+    list: ansonman@htsc.com, sunzhennan@kmerit.com
+  - name: group3
+    list: kennethhan@htsc.com, chesterchan@htsc.com
+  - name: group4
+    list: fatlon@sina.cn

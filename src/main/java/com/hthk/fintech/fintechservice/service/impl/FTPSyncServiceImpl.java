@@ -230,15 +230,26 @@ public class FTPSyncServiceImpl
                 throw new RuntimeException(e);
             }
         });
+        after(ftpSyncList, ftpSourceMap, connectionMap);
+    }
 
+    private void after(List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, FTPConnection> connectionMap) {
+
+        Set<String> disconnectSet = new HashSet<>();
         ftpSyncList.stream().forEach(t -> {
             try {
                 String sourceId = t.getSource();
                 String destId = t.getDest();
                 FTPSourceFolder sourceFolderInfo = ftpSourceMap.get(sourceId);
                 FTPSourceFolder destFolderInfo = ftpSourceMap.get(destId);
-                after(sourceFolderInfo, connectionMap);
-                after(destFolderInfo, connectionMap);
+                if (!disconnectSet.contains(sourceId)) {
+                    after(sourceFolderInfo, connectionMap);
+                    disconnectSet.add(sourceId);
+                }
+                if (!disconnectSet.contains(destId)) {
+                    after(destFolderInfo, connectionMap);
+                    disconnectSet.add(destId);
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

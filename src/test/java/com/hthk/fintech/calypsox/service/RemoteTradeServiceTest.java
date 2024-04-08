@@ -8,11 +8,13 @@ import com.hthk.fintech.fintechservice.config.AppConfig;
 import com.hthk.fintech.model.data.datacenter.query.EntityTypeEnum;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
+import com.hthk.fintech.model.test.ProductUsage;
 import com.hthk.fintech.model.trade.TradeInfo;
 import com.hthk.fintech.model.web.http.*;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import com.hthk.fintech.utils.CSVUtils;
 import com.hthk.fintech.utils.RemoteServiceUtils;
+import org.apache.commons.collections.map.HashedMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -21,6 +23,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -151,6 +154,76 @@ public class RemoteTradeServiceTest {
         logger.info(LOG_WRAP, "tradeInfoList 1st", JacksonUtils.toJsonPrettyTry(tradeInfoList.get(0)));
 
         CSVUtils.write(tradeInfoList, outputFile, "UTF-8", true, FutureFXTradeInfo.class);
+    }
+
+    @Test
+    public void testGetSOPBestOfAndOutput() throws IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, ServiceInternalException {
+
+        String outputFile = "C:\\Rock\\Datas\\IT\\DEV_Datas\\tmp\\sop.csv";
+
+        ApplicationInstance instance = new ApplicationInstance();
+        instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance(ENV_NAME_UAT);
+
+        RequestDateTime dateTime = new RequestDateTime();
+        dateTime.setTimeZone("HKT");
+        dateTime.setRunDateTime("2023-12-20 14:19:20");
+
+        CriteriaTrade criteria = new CriteriaTrade();
+        criteria.setTradeFilter("HTSC_FICC_SOP");
+
+        List<TradeInfo> tradeInfoList = remoteTradeService.getTrade(instance, dateTime, criteria);
+        tradeInfoList = tradeInfoList.stream().filter(t -> t.getProductSubType().equals("BestOfBasket")).collect(Collectors.toList());
+        logger.info(LOG_WRAP, "tradeInfoList 1st", JacksonUtils.toJsonPrettyTry(tradeInfoList.get(0)));
+
+        CSVUtils.write(tradeInfoList, outputFile, "UTF-8", true, TradeInfo.class);
+    }
+
+    @Test
+    public void testGetSOPAndOutput() throws IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, ServiceInternalException {
+
+        String outputFile = "C:\\Rock\\Datas\\IT\\DEV_Datas\\tmp\\sop.csv";
+
+        ApplicationInstance instance = new ApplicationInstance();
+        instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance(ENV_NAME_UAT);
+
+        RequestDateTime dateTime = new RequestDateTime();
+        dateTime.setTimeZone("HKT");
+        dateTime.setRunDateTime("2023-12-20 14:19:20");
+
+        CriteriaTrade criteria = new CriteriaTrade();
+        criteria.setTradeFilter("HTSC_FICC_SOP");
+
+        List<TradeInfo> tradeInfoList = remoteTradeService.getTrade(instance, dateTime, criteria);
+        logger.info(LOG_WRAP, "tradeInfoList 1st", JacksonUtils.toJsonPrettyTry(tradeInfoList.get(0)));
+
+        Map<String, ProductUsage> productUsageMap = convertMap(tradeInfoList);
+        List<ProductUsage> list = productUsageMap.values().stream().collect(Collectors.toList());
+        CSVUtils.write(list, outputFile, "UTF-8", true, TradeInfo.class);
+    }
+
+    private Map<String, ProductUsage> convertMap(List<TradeInfo> tradeInfoList) {
+
+        Map<String, ProductUsage> map = new HashedMap();
+        tradeInfoList.forEach(t -> {
+            String strategyName = t.getProductSubType();
+            LocalDateTime lastTradeDateTime = t.getTradeDateTime();
+            if (map.containsKey(strategyName)) {
+                ProductUsage usage = map.get(strategyName);
+                LocalDateTime time = usage.getLastTradeDateTime().compareTo(lastTradeDateTime) > 0 ? usage.getLastTradeDateTime() : lastTradeDateTime;
+                usage.setLastTradeDateTime(time);
+                usage.setCount(new Integer(new Integer(usage.getCount()) + 1).toString());
+                map.put(strategyName, usage);
+            } else {
+                ProductUsage usage = new ProductUsage();
+                usage.setCount(new Integer(1).toString());
+                usage.setStrategyName(strategyName);
+                usage.setLastTradeDateTime(t.getTradeDateTime());
+                map.put(strategyName, usage);
+            }
+        });
+        return map;
     }
 
 }

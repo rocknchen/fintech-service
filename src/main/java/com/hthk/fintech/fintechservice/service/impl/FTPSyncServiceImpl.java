@@ -208,6 +208,7 @@ public class FTPSyncServiceImpl
                 try {
                     Map<String, FTPConnection> connectionMap = build(appInfo);
                     logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
+                    logger.info(LOG_WRAP, "ftpSyncList: {}", Optional.ofNullable(ftpSyncList).map(t -> JacksonUtils.toYMLPrettyTry(t)).orElse(null));
                     process(ftpSyncList, ftpSourceMap, connectionMap, emailMap);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);

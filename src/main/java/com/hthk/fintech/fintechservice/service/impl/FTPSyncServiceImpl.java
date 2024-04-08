@@ -251,7 +251,7 @@ public class FTPSyncServiceImpl
                     disconnectSet.add(destId);
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+//                throw new RuntimeException(e);
             }
         });
     }

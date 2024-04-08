@@ -120,6 +120,9 @@ public class FTPSyncServiceImpl
 
     private List<String> buildList(List<String> emailReceiveList, Map<String, List<String>> emailMap) {
         List<String> list = new ArrayList<>();
+        if (CollectionUtils.isEmpty(emailReceiveList)) {
+            return Arrays.asList();
+        }
         emailReceiveList.forEach(t -> {
             List<String> subList = emailMap.get(t);
             list.addAll(subList);

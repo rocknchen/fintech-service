@@ -83,9 +83,7 @@ ftpSyncList:
     subject: Traiana_SCB_PB(UAT)_GIVE_UP_TRADE
     emailReceiveList:
       - group1
-      - group3
     emailCCList:
-      - group2
 
 emailList:
   - name: group1

@@ -40,7 +40,7 @@ ftpSourceList:
 
   - id: cal129_calypso
     type: FTP
-    server: 168.64.37.129
+    server: 168.64.17.87
     port: 21
     user: calypso
     pwd: App@Admin123

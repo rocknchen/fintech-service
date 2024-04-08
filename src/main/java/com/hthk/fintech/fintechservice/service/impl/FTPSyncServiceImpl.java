@@ -116,8 +116,6 @@ public class FTPSyncServiceImpl
             }
         });
 
-        after(sourceFolderInfo, connectionMap);
-        after(destFolderInfo, connectionMap);
     }
 
     private List<String> buildList(List<String> emailReceiveList, Map<String, List<String>> emailMap) {
@@ -228,6 +226,19 @@ public class FTPSyncServiceImpl
         ftpSyncList.stream().forEach(t -> {
             try {
                 process(t, ftpSourceMap, connectionMap, emailMap);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        ftpSyncList.stream().forEach(t -> {
+            try {
+                String sourceId = t.getSource();
+                String destId = t.getDest();
+                FTPSourceFolder sourceFolderInfo = ftpSourceMap.get(sourceId);
+                FTPSourceFolder destFolderInfo = ftpSourceMap.get(destId);
+                after(sourceFolderInfo, connectionMap);
+                after(destFolderInfo, connectionMap);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

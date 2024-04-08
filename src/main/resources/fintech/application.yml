@@ -82,8 +82,9 @@ ftpSyncList:
     sendEmail: true
     subject: Traiana_SCB_PB(UAT)_GIVE_UP_TRADE
     emailReceiveList:
-      - group1
+      - group4
     emailCCList:
+      - group1
 
 emailList:
   - name: group1
@@ -93,4 +94,4 @@ emailList:
   - name: group3
     list: kennethhan@htsc.com, chesterchan@htsc.com
   - name: group4
-    list: fatlon@sina.cn
+    list: sunzhennan@kmerit.com

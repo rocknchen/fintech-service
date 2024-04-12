@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_PROD;
 import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
 import static com.hthk.fintech.config.FintechStaticData.LOG_WRAP;
 
@@ -69,7 +70,7 @@ public class RemoteEODQuoteServiceTest {
     @Test
     public void testGetEODQuote_GENERAL() throws ServiceInternalException, IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InvalidRequestException {
 
-        String startStr = "2024-03-18";
+        String startStr = "2024-04-11";
         LocalDate today = LocalDate.now();
 
         LocalDate start = LocalDate.parse(startStr, DateTimeFormatter.ISO_DATE);
@@ -93,7 +94,7 @@ public class RemoteEODQuoteServiceTest {
 
         ApplicationInstance instance = new ApplicationInstance();
         instance.setName(ApplicationEnum.CALYPSO);
-        instance.setInstance(ENV_NAME_UAT);
+        instance.setInstance(ENV_NAME_PROD);
 
         RequestDateTime dateTime = new RequestDateTime();
         dateTime.setTimeZone("HKT");

@@ -40,7 +40,7 @@ ftpSourceList:
 
   - id: cal129_calypso
     type: FTP
-    server: 168.64.17.87
+    server: 168.64.37.129
     port: 21
     user: calypso
     pwd: App@Admin123
@@ -82,9 +82,10 @@ ftpSyncList:
     sendEmail: true
     subject: Traiana_SCB_PB(UAT)_GIVE_UP_TRADE
     emailReceiveList:
-      - group4
-    emailCCList:
+      - group3
       - group1
+    emailCCList:
+      - group2
 
 emailList:
   - name: group1
@@ -92,6 +93,6 @@ emailList:
   - name: group2
     list: ansonman@htsc.com, sunzhennan@kmerit.com
   - name: group3
-    list: kennethhan@htsc.com, chesterchan@htsc.com
+    list: chesterchan@htsc.com, kennethhan@htsc.com
   - name: group4
     list: sunzhennan@kmerit.com

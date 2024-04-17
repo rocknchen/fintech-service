@@ -1,6 +1,7 @@
 package com.hthk.fintech.calypsox.service;
 
 import com.hthk.calypsox.model.person.UserInfo;
+import com.hthk.calypsox.model.person.UserInfoVO;
 import com.hthk.calypsox.model.person.criteria.CriteriaUser;
 import com.hthk.calypsox.model.staticdata.book.BookAccess;
 import com.hthk.calypsox.model.staticdata.book.BookAccessOrig;
@@ -12,12 +13,14 @@ import com.hthk.fintech.model.web.http.RequestDateTime;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import com.hthk.fintech.utils.CSVUtils;
 import com.hthk.fintech.utils.RemoteServiceUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -101,6 +104,51 @@ public class RemoteUserServiceTest {
         List<BookAccess> bookAccessList = convert(bookAccessOrigList, bookCatMap);
 
         CSVUtils.write(bookAccessList, outputFile, "UTF-8", true, BookAccess.class);
+    }
+
+    @Test
+    public void testGetAllUserAccess_DEFAULT() throws IOException, NoSuchFieldException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, ServiceInternalException {
+
+        String outputFile = "C:/Rock/Datas/IT/DEV_Datas/tmp/allLUserAccess.csv";
+
+        ApplicationInstance instance = new ApplicationInstance();
+        instance.setName(ApplicationEnum.CALYPSO);
+        instance.setInstance(ENV_NAME_UAT);
+
+        RequestDateTime dateTime = new RequestDateTime();
+        dateTime.setTimeZone("HKT");
+        dateTime.setRunDateTime("2023-12-20 14:19:20");
+
+        CriteriaUser criteria = new CriteriaUser();
+
+        List<UserInfo> userInfoList = remoteUserService.getUserInfoList(instance, dateTime, criteria);
+        logger.info(LOG_WRAP, "userInfo 1st", JacksonUtils.toJsonPrettyTry(userInfoList.get(0)));
+
+        List<UserInfoVO> voList = convert(userInfoList);
+
+        CSVUtils.write(voList, outputFile, "UTF-8", true, UserInfoVO.class);
+    }
+
+    private UserInfoVO convert(UserInfo userInfo, String groupName) {
+        UserInfoVO vo = new UserInfoVO();
+        BeanUtils.copyProperties(userInfo, vo);
+        vo.setUserGroup(groupName);
+        return vo;
+    }
+
+    private List<UserInfoVO> convert(UserInfo userInfo) {
+        if (CollectionUtils.isEmpty(userInfo.getGroupList())) {
+            return Arrays.asList(convert(userInfo, null));
+        } else {
+            return userInfo.getGroupList().stream().map(t -> convert(userInfo, t)).collect(Collectors.toList());
+        }
+    }
+
+    private List<UserInfoVO> convert(List<UserInfo> userInfoList) {
+
+        List<UserInfoVO> all = new ArrayList<>();
+        userInfoList.forEach(t -> all.addAll(convert(t)));
+        return all;
     }
 
     private Map<String, String> create(List<BookTestInfo> bookTestInfoList) {

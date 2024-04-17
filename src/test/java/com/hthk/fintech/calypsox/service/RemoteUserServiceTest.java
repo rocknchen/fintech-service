@@ -33,6 +33,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_PROD;
 import static com.hthk.calypsox.config.CalypsoStaticData.ENV_NAME_UAT;
 import static com.hthk.fintech.config.FintechStaticData.LOG_WRAP;
 
@@ -159,7 +160,7 @@ public class RemoteUserServiceTest {
 
         String outputFile = "C:/Rock/Datas/IT/DEV_Datas/tmp/allFICCUserAccess.csv";
 
-        String instanceName = ENV_NAME_UAT;
+        String instanceName = ENV_NAME_PROD;
 
         List<BookInfo> ficcBookList = getFICCBookList(instanceName);
         logger.info("ficcBookList: {}", JacksonUtils.toYMLPrettyTry(ficcBookList.get(0)));
@@ -170,11 +171,16 @@ public class RemoteUserServiceTest {
         logger.info("userInfoList: {}", userInfoList.size());
 
         List<BookInfo> filterFiccBookList = filterBook(ficcBookList, ignoreBookList);
+        filterFiccBookList = filterBookMirror(filterFiccBookList);
 
         List<BookAccessALl> bookAccessALlList = generate(filterFiccBookList, userInfoList);
         Collections.sort(bookAccessALlList, new BasicBookAccessALLComparator());
 
         CSVUtils.write(bookAccessALlList, outputFile, "UTF-8", true, UserInfoVO.class);
+    }
+
+    private List<BookInfo> filterBookMirror(List<BookInfo> filterFiccBookList) {
+        return filterFiccBookList.stream().filter(t -> !t.getName().endsWith(" MIRROR")).collect(Collectors.toList());
     }
 
     private List<BookInfo> filterBook(List<BookInfo> ficcBookList, List<String> ignoreBookList) {

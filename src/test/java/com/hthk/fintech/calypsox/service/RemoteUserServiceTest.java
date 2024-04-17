@@ -10,6 +10,7 @@ import com.hthk.calypsox.model.staticdata.book.BookTestInfo;
 import com.hthk.calypsox.model.staticdata.book.criteria.CriteriaBook;
 import com.hthk.common.utils.FileUtils;
 import com.hthk.fintech.exception.ServiceInternalException;
+import com.hthk.fintech.fintechservice.comparator.BasicBookAccessALLComparator;
 import com.hthk.fintech.fintechservice.comparator.BasicBookInfoComparator;
 import com.hthk.fintech.model.software.app.ApplicationEnum;
 import com.hthk.fintech.model.software.app.ApplicationInstance;
@@ -51,10 +52,18 @@ public class RemoteUserServiceTest {
 
     List<String> ficcGroupList = new ArrayList<>();
 
+    List<String> ignoreUserList = new ArrayList<>();
+
+    List<String> ignoreBookList = new ArrayList<>();
+
     @Before
     public void setUp() throws Exception {
 
         String ficcBookFile = "C:/Rock/Datas/Docs/HTS/jira/cal1345/ficc_books.csv";
+
+        String ignoreUserFile = "C:/Rock/Datas/Docs/HTS/jira/cal1345/ignoreUser.csv";
+
+        String ignoreBookFile = "C:/Rock/Datas/Docs/HTS/jira/cal1345/ignoreBook.csv";
 
         int num = 1;
         bookTestInfoList.add(new BookTestInfo(num++, "CIFXDH", "FX Option"));
@@ -83,6 +92,8 @@ public class RemoteUserServiceTest {
         bookTestInfoList.add(new BookTestInfo(num++, "CIPNFX", "Passthrough"));
 
         ficcGroupList.addAll(FileUtils.readResourceAsStrList(new File(ficcBookFile)));
+        ignoreUserList.addAll(FileUtils.readResourceAsStrList(new File(ignoreUserFile)));
+        ignoreBookList.addAll(FileUtils.readResourceAsStrList(new File(ignoreBookFile)));
 
     }
 
@@ -158,9 +169,16 @@ public class RemoteUserServiceTest {
         List<UserInfo> userInfoList = getALlFICCUserList(instanceName, ficcGroupList);
         logger.info("userInfoList: {}", userInfoList.size());
 
-        List<BookAccessALl> bookAccessALlList = generate(ficcBookList, userInfoList);
+        List<BookInfo> filterFiccBookList = filterBook(ficcBookList, ignoreBookList);
+
+        List<BookAccessALl> bookAccessALlList = generate(filterFiccBookList, userInfoList);
+        Collections.sort(bookAccessALlList, new BasicBookAccessALLComparator());
 
         CSVUtils.write(bookAccessALlList, outputFile, "UTF-8", true, UserInfoVO.class);
+    }
+
+    private List<BookInfo> filterBook(List<BookInfo> ficcBookList, List<String> ignoreBookList) {
+        return ficcBookList.stream().filter(b -> !ignoreBookList.contains(b.getName())).collect(Collectors.toList());
     }
 
     private List<BookAccessALl> generate(List<BookInfo> ficcBookList, List<UserInfo> userInfoList) {
@@ -178,9 +196,9 @@ public class RemoteUserServiceTest {
         List<String> bookReadWriteList = ui.getBookReadWrite();
         List<String> bookReadOnlyList = ui.getBookReadOnly();
         String bookName = bookInfo.getName();
-        if (bookReadWriteList.contains(bookName)) {
+        if (bookReadWriteList.contains(bookName) && !ignoreUserList.contains(ui.getUserName())) {
             return generateBookAccessAll(bookInfo, ui, "Read and Write");
-        } else if (bookReadOnlyList.contains(bookName)) {
+        } else if (bookReadOnlyList.contains(bookName) && !ignoreUserList.contains(ui.getUserName())) {
             return generateBookAccessAll(bookInfo, ui, "ReadOnly");
         } else {
             return null;
@@ -191,8 +209,12 @@ public class RemoteUserServiceTest {
 
         BookAccessALl bookAccess = new BookAccessALl();
         BeanUtils.copyProperties(bookInfo, bookAccess);
+        bookAccess.setBookName(bookInfo.getName());
         bookAccess.setAccessType(accessType);
+        bookAccess.setTradingDesk(bookInfo.getTradingDesk());
         bookAccess.setUserName(ui.getFullName());
+        bookAccess.setId(ui.getUserName());
+        bookAccess.setDesc(ui.getDescription());
         return bookAccess;
     }
 

@@ -38,9 +38,23 @@ application:
 
 ftpSourceList:
 
+  - id: prod_calypso
+    type: FTP
+    server: 168.7.9.13
+    port: 21
+    user: ftpread
+    pwd: App@Admin123
+
   - id: cal129_calypso
     type: FTP
     server: 168.64.37.129
+    port: 21
+    user: calypso
+    pwd: App@Admin123
+
+  - id: cal87_calypso
+    type: FTP
+    server: 168.64.17.87
     port: 21
     user: calypso
     pwd: App@Admin123
@@ -70,6 +84,12 @@ remoteSource:
     - id: traiana_ack_result
       sourceId: traiana_uat
       folder: /Outgoing
+
+  ftpFileList:
+
+    - id: updateManagerEngineStuck
+      sourceId: cal87_calypso
+      file: /opt/calypso/monitor/stuck.txt
 
 ftpSyncList:
 

@@ -62,11 +62,13 @@ public class FTPSyncServiceImpl
         logger.info(LOG_DEFAULT, "FTPSyncService", "start");
 
         Map<String, FTPSourceFolder> ftpSourceMap = buildFTPSourceMap(appInfo);
+        Set<String> ftpSourceIdSet = buildSourceId(ftpSourceMap);
+        logger.info(LOG_WRAP, "ftpSourceIdSet", ftpSourceIdSet);
 
         List<SyncInfo> ftpSyncList = appInfo.getFtpSyncList();
         Map<String, List<String>> emailMap = buildEmailMap(appInfo);
 
-        start(loop, sleepSec, ftpSyncList, ftpSourceMap, emailMap);
+        start(loop, sleepSec, ftpSyncList, ftpSourceMap, ftpSourceIdSet, emailMap);
 
     }
 
@@ -201,13 +203,13 @@ public class FTPSyncServiceImpl
         return connectionMap.get(sourceId);
     }
 
-    private void start(boolean loop, int sleepSec, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Map<String, List<String>> emailMap) throws InterruptedException {
+    private void start(boolean loop, int sleepSec, List<SyncInfo> ftpSyncList, Map<String, FTPSourceFolder> ftpSourceMap, Set<String> ftpSourceIdSet, Map<String, List<String>> emailMap) throws InterruptedException {
 
         if (loop) {
             while (true) {
 
                 try {
-                    Map<String, FTPConnection> connectionMap = build(appInfo);
+                    Map<String, FTPConnection> connectionMap = build(appInfo, ftpSourceIdSet);
                     logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
                     logger.info(LOG_WRAP, "ftpSyncList: {}", Optional.ofNullable(ftpSyncList).map(t -> JacksonUtils.toYMLPrettyTry(t)).orElse(null));
                     process(ftpSyncList, ftpSourceMap, connectionMap, emailMap);
@@ -218,7 +220,7 @@ public class FTPSyncServiceImpl
             }
         } else {
 
-            Map<String, FTPConnection> connectionMap = build(appInfo);
+            Map<String, FTPConnection> connectionMap = build(appInfo, ftpSourceIdSet);
             logger.info(LOG_WRAP, "connection done", JacksonUtils.toYMLPrettyTry(connectionMap.keySet()));
 
             process(ftpSyncList, ftpSourceMap, connectionMap, emailMap);
@@ -269,16 +271,18 @@ public class FTPSyncServiceImpl
         return ftpFolderList.stream().collect(Collectors.toMap(FTPSourceFolder::getId, Function.identity()));
     }
 
-    private Map<String, FTPConnection> build(ApplicationInfo appInfo) {
+    private Map<String, FTPConnection> build(ApplicationInfo appInfo, Set<String> ftpSourceIdSet) {
 
         List<FTPSource> ftpSourceList = appInfo.getFtpSourceList();
-        List<FTPConnection> connectionList = ftpSourceList.stream().map(t -> {
-            try {
-                return connect(t);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }).collect(Collectors.toList());
+        List<FTPConnection> connectionList = ftpSourceList.stream()
+                .filter(t -> ftpSourceIdSet.contains(t.getId()))
+                .map(t -> {
+                    try {
+                        return connect(t);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }).collect(Collectors.toList());
         return connectionList.stream().collect(Collectors.toMap(FTPConnection::getId, Function.identity()));
     }
 
@@ -299,6 +303,10 @@ public class FTPSyncServiceImpl
         FTPClientService clientService = getService(ftpSource.getType());
         logger.info(LOG_DEFAULT, "connect", ftpSource.getId());
         return clientService.connect(ftpSource);
+    }
+
+    private Set<String> buildSourceId(Map<String, FTPSourceFolder> ftpSourceMap) {
+        return ftpSourceMap.values().stream().map(t -> t.getSourceId()).collect(Collectors.toSet());
     }
 
 }

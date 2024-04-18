@@ -107,6 +107,11 @@ ftpSyncList:
     emailCCList:
       - group2
 
+monitorInfoList:
+  - id: monitorUpdateManagerEngineStuck
+    type: FTP_FILE
+    referenceId: updateManagerEngineStuck
+
 emailList:
   - name: group1
     list: rockchen@htsc.com

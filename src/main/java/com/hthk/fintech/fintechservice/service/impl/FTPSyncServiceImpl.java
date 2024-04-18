@@ -1,9 +1,7 @@
 package com.hthk.fintech.fintechservice.service.impl;
 
-import com.hthk.common.internet.email.service.EmailService;
 import com.hthk.common.model.Internet.message.email.MessageEmail;
 import com.hthk.common.utils.FileUtils;
-import com.hthk.fintech.config.AppConfig;
 import com.hthk.fintech.config.ApplicationInfo;
 import com.hthk.fintech.enumration.FTPTypeEnum;
 import com.hthk.fintech.exception.InvalidRequestException;
@@ -22,7 +20,6 @@ import com.jcraft.jsch.SftpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -46,15 +43,6 @@ public class FTPSyncServiceImpl
         implements FTPSyncService {
 
     private final static Logger logger = LoggerFactory.getLogger(FTPSyncServiceImpl.class);
-
-    @Autowired
-    private ApplicationInfo appInfo;
-
-    @Autowired
-    private AppConfig appConfig;
-
-    @Autowired
-    private EmailService emailService;
 
     @Override
     public void start(boolean loop, int sleepSec) throws InvalidRequestException, ServiceInternalException, InterruptedException {

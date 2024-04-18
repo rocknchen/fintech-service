@@ -254,11 +254,6 @@ public class FTPSyncServiceImpl
         return clientService.list(connection, changeFolder);
     }
 
-    private Map<String, FTPSourceFolder> buildFTPSourceMap(ApplicationInfo appInfo) {
-        List<FTPSourceFolder> ftpFolderList = appInfo.getRemoteSource().getFtpFolderList();
-        return ftpFolderList.stream().collect(Collectors.toMap(FTPSourceFolder::getId, Function.identity()));
-    }
-
     private Map<String, FTPConnection> build(ApplicationInfo appInfo, Set<String> ftpSourceIdSet) {
 
         List<FTPSource> ftpSourceList = appInfo.getFtpSourceList();
@@ -291,10 +286,6 @@ public class FTPSyncServiceImpl
         FTPClientService clientService = getService(ftpSource.getType());
         logger.info(LOG_DEFAULT, "connect", ftpSource.getId());
         return clientService.connect(ftpSource);
-    }
-
-    private Set<String> buildSourceId(Map<String, FTPSourceFolder> ftpSourceMap) {
-        return ftpSourceMap.values().stream().map(t -> t.getSourceId()).collect(Collectors.toSet());
     }
 
 }

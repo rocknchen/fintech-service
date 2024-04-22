@@ -7,13 +7,17 @@ import com.hthk.fintech.fintechservice.service.FileMonitorService;
 import com.hthk.fintech.fintechservice.service.basic.AbstractFTPService;
 import com.hthk.fintech.model.file.MonitorCompleteInfo;
 import com.hthk.fintech.model.file.MonitorInfo;
+import com.hthk.fintech.model.net.ftp.FTPConnection;
 import com.hthk.fintech.model.net.ftp.FTPSourceFile;
+import com.hthk.fintech.model.task.QuartzScheduledJob;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,16 +40,63 @@ public class FileMonitorServiceImpl
     private final static Logger logger = LoggerFactory.getLogger(FileMonitorServiceImpl.class);
 
     @Override
-    public void start() throws InvalidRequestException, ServiceInternalException, InterruptedException {
+    public void start(Scheduler scheduler) throws InvalidRequestException, ServiceInternalException, InterruptedException {
 
         logger.info(LOG_DEFAULT, "FileMonitorService", "start");
-        List<MonitorCompleteInfo> mciList = buildMCIList();
+        Map<String, FTPSourceFile> ftpSourceFileMap = buildFTPSourceFileMap(appInfo);
+        logger.info(LOG_DEFAULT, "ftpSourceFileMap", JacksonUtils.toYMLPrettyTry(ftpSourceFileMap));
+
+        List<MonitorCompleteInfo> mciList = buildMCIList(ftpSourceFileMap);
         logger.info(LOG_DEFAULT, "mciList", JacksonUtils.toYMLPrettyTry(mciList));
 
-        Map<String, FTPSourceFile> ftpSourceFileMap = buildFTPSourceFileMap(appInfo);
         Set<String> ftpSourceIdSet = buildSourceIdForFile(ftpSourceFileMap);
         logger.info(LOG_WRAP, "ftpSourceIdSet", ftpSourceIdSet);
 
+        start(scheduler, mciList, ftpSourceIdSet);
+    }
+
+    private void start(Scheduler scheduler, QuartzScheduledJob job, Set<String> ftpSourceIdSet) throws SchedulerException {
+
+        Map<String, FTPConnection> connectionMap = build(appInfo, ftpSourceIdSet);
+        scheduler.scheduleJob(job.getJobDetail(), job.getTrigger());
+    }
+
+    private void start(Scheduler scheduler, List<MonitorCompleteInfo> mciList, Set<String> ftpSourceIdSet) {
+
+        List<QuartzScheduledJob> jobList = buildJobList(mciList);
+        logger.info("jobList: {}", jobList.size());
+        jobList.stream().forEach(job -> {
+            try {
+                start(scheduler, job, ftpSourceIdSet);
+            } catch (SchedulerException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private QuartzScheduledJob buildJob(MonitorCompleteInfo mci) {
+
+        String group = "default";
+        String name = mci.getMonitorInfo().getId();
+        String expression = mci.getMonitorInfo().getTriggerExpression();
+        CronTrigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity(name, group).startNow()
+                .withSchedule(CronScheduleBuilder.cronSchedule(expression))
+                .build();
+
+        String jobGroup = group;
+        String jobName = "job_" + name;
+
+        JobDataMap jobDataMap = new JobDataMap();
+        JobDetail jobDetail = JobBuilder.newJob(QuartzJobWrapper.class)
+                .usingJobData(jobDataMap)
+                .withIdentity(jobName, jobGroup).build();
+
+        return new QuartzScheduledJob(trigger, jobDetail);
+    }
+
+    private List<QuartzScheduledJob> buildJobList(List<MonitorCompleteInfo> mciList) {
+        return mciList.stream().map(t -> buildJob(t)).collect(Collectors.toList());
     }
 
     private MonitorCompleteInfo buildMCI(MonitorInfo mi, Map<String, FTPSourceFile> ftpSourceFileMap) {
@@ -54,13 +105,10 @@ public class FileMonitorServiceImpl
         return ftpSourceFile == null ? null : new MonitorCompleteInfo(mi, ftpSourceFile);
     }
 
-    private List<MonitorCompleteInfo> buildMCIList() {
+    private List<MonitorCompleteInfo> buildMCIList(Map<String, FTPSourceFile> ftpSourceFileMap) {
 
         List<MonitorInfo> monitorInfoList = getMonitorInfoList(appInfo);
         logger.info(LOG_WRAP, "monitorInfoList", CollectionUtils.isEmpty(monitorInfoList) ? null : JacksonUtils.toYMLPrettyTry(monitorInfoList));
-
-        Map<String, FTPSourceFile> ftpSourceFileMap = buildFTPSourceFileMap(appInfo);
-        logger.info(LOG_DEFAULT, "ftpSourceFileMap", JacksonUtils.toYMLPrettyTry(ftpSourceFileMap));
 
         return monitorInfoList.stream().map(t -> buildMCI(t, ftpSourceFileMap)).filter(t -> t != null).collect(Collectors.toList());
     }

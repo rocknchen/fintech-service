@@ -26,7 +26,6 @@ import org.springframework.util.CollectionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.hthk.fintech.config.FintechStaticData.*;
@@ -252,40 +251,6 @@ public class FTPSyncServiceImpl
     private List<String> listFolder(FTPConnection connection, String changeFolder) throws InvalidRequestException, ServiceInternalException, IOException {
         FTPClientService clientService = getService(connection.getType());
         return clientService.list(connection, changeFolder);
-    }
-
-    private Map<String, FTPConnection> build(ApplicationInfo appInfo, Set<String> ftpSourceIdSet) {
-
-        List<FTPSource> ftpSourceList = appInfo.getFtpSourceList();
-        List<FTPConnection> connectionList = ftpSourceList.stream()
-                .filter(t -> ftpSourceIdSet.contains(t.getId()))
-                .map(t -> {
-                    try {
-                        return connect(t);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }).collect(Collectors.toList());
-        return connectionList.stream().collect(Collectors.toMap(FTPConnection::getId, Function.identity()));
-    }
-
-    private FTPClientService getService(FTPTypeEnum ftpType) throws InvalidRequestException {
-        switch (ftpType) {
-            case FTP:
-                return ftpClientService;
-            case SFTP:
-                return sftpClientService;
-            default:
-                throw new InvalidRequestException(KW_NOT_SUPPORTED);
-        }
-    }
-
-    private FTPConnection connect(FTPSource ftpSource) throws IOException, InvalidRequestException, ServiceInternalException, JSchException {
-        FTPConnection conn = new FTPConnection();
-        BeanUtils.copyProperties(ftpSource, conn);
-        FTPClientService clientService = getService(ftpSource.getType());
-        logger.info(LOG_DEFAULT, "connect", ftpSource.getId());
-        return clientService.connect(ftpSource);
     }
 
 }

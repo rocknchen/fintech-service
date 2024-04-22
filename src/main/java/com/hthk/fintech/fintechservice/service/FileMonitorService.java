@@ -2,6 +2,7 @@ package com.hthk.fintech.fintechservice.service;
 
 import com.hthk.fintech.exception.InvalidRequestException;
 import com.hthk.fintech.exception.ServiceInternalException;
+import org.quartz.Scheduler;
 
 /**
  * @Author: Rock CHEN
@@ -9,6 +10,6 @@ import com.hthk.fintech.exception.ServiceInternalException;
  */
 public interface FileMonitorService {
 
-    void start() throws InvalidRequestException, ServiceInternalException, InterruptedException;
+    void start(Scheduler scheduler) throws InvalidRequestException, ServiceInternalException, InterruptedException;
 
 }

@@ -7,7 +7,6 @@ import com.hthk.fintech.fintechservice.service.FileMonitorService;
 import com.hthk.fintech.fintechservice.service.basic.AbstractFTPService;
 import com.hthk.fintech.model.file.MonitorCompleteInfo;
 import com.hthk.fintech.model.file.MonitorInfo;
-import com.hthk.fintech.model.net.ftp.FTPConnection;
 import com.hthk.fintech.model.net.ftp.FTPSourceFile;
 import com.hthk.fintech.model.task.QuartzScheduledJob;
 import com.hthk.fintech.structure.utils.JacksonUtils;
@@ -17,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,8 +55,8 @@ public class FileMonitorServiceImpl
 
     private void start(Scheduler scheduler, QuartzScheduledJob job, Set<String> ftpSourceIdSet) throws SchedulerException {
 
-        Map<String, FTPConnection> connectionMap = build(appInfo, ftpSourceIdSet);
         scheduler.scheduleJob(job.getJobDetail(), job.getTrigger());
+        scheduler.start();
     }
 
     private void start(Scheduler scheduler, List<MonitorCompleteInfo> mciList, Set<String> ftpSourceIdSet) {
@@ -88,6 +86,11 @@ public class FileMonitorServiceImpl
         String jobName = "job_" + name;
 
         JobDataMap jobDataMap = new JobDataMap();
+        jobDataMap.put("appInfo", appInfo);
+        jobDataMap.put("mci", mci);
+        jobDataMap.put("FTP_CLIENT", ftpClientService);
+        jobDataMap.put("SFTP_CLIENT", sftpClientService);
+
         JobDetail jobDetail = JobBuilder.newJob(QuartzJobWrapper.class)
                 .usingJobData(jobDataMap)
                 .withIdentity(jobName, jobGroup).build();

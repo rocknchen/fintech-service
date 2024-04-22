@@ -88,7 +88,7 @@ remoteSource:
   ftpFileList:
 
     - id: updateManagerEngineStuck
-      sourceId: cal87_calypso
+      sourceId: prod_calypso
       file: /opt/calypso/monitor/stuck.txt
 
 ftpSyncList:

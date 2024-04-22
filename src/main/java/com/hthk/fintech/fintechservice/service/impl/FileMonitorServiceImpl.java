@@ -8,6 +8,7 @@ import com.hthk.fintech.fintechservice.service.basic.AbstractFTPService;
 import com.hthk.fintech.model.file.MonitorCompleteInfo;
 import com.hthk.fintech.model.file.MonitorInfo;
 import com.hthk.fintech.model.net.ftp.FTPSourceFile;
+import com.hthk.fintech.model.net.network.EmailInfo;
 import com.hthk.fintech.model.task.QuartzScheduledJob;
 import com.hthk.fintech.structure.utils.JacksonUtils;
 import org.apache.commons.collections.CollectionUtils;
@@ -16,9 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.hthk.fintech.config.FintechStaticData.LOG_DEFAULT;
@@ -50,7 +49,17 @@ public class FileMonitorServiceImpl
         Set<String> ftpSourceIdSet = buildSourceIdForFile(ftpSourceFileMap);
         logger.info(LOG_WRAP, "ftpSourceIdSet", ftpSourceIdSet);
 
-        start(scheduler, mciList, ftpSourceIdSet);
+        Map<String, List<String>> emailMap = buildEmailMap(appInfo);
+
+        start(scheduler, mciList, ftpSourceIdSet, emailMap);
+    }
+
+    private Map<String, List<String>> buildEmailMap(ApplicationInfo appInfo) {
+        List<EmailInfo> emailList = appInfo.getEmailList();
+        Map<String, String> origMap = emailList.stream().collect(Collectors.toMap(EmailInfo::getName, EmailInfo::getList));
+        Map<String, List<String>> emailMap = new HashMap<>();
+        origMap.forEach((k, v) -> emailMap.put(k, Arrays.stream(v.split(",")).map(t -> t.trim()).collect(Collectors.toList())));
+        return emailMap;
     }
 
     private void start(Scheduler scheduler, QuartzScheduledJob job, Set<String> ftpSourceIdSet) throws SchedulerException {
@@ -59,9 +68,9 @@ public class FileMonitorServiceImpl
         scheduler.start();
     }
 
-    private void start(Scheduler scheduler, List<MonitorCompleteInfo> mciList, Set<String> ftpSourceIdSet) {
+    private void start(Scheduler scheduler, List<MonitorCompleteInfo> mciList, Set<String> ftpSourceIdSet, Map<String, List<String>> emailMap) {
 
-        List<QuartzScheduledJob> jobList = buildJobList(mciList);
+        List<QuartzScheduledJob> jobList = buildJobList(mciList, emailMap);
         logger.info("jobList: {}", jobList.size());
         jobList.stream().forEach(job -> {
             try {
@@ -72,7 +81,7 @@ public class FileMonitorServiceImpl
         });
     }
 
-    private QuartzScheduledJob buildJob(MonitorCompleteInfo mci) {
+    private QuartzScheduledJob buildJob(MonitorCompleteInfo mci, Map<String, List<String>> emailMap) {
 
         String group = "default";
         String name = mci.getMonitorInfo().getId();
@@ -90,6 +99,8 @@ public class FileMonitorServiceImpl
         jobDataMap.put("mci", mci);
         jobDataMap.put("FTP_CLIENT", ftpClientService);
         jobDataMap.put("SFTP_CLIENT", sftpClientService);
+        jobDataMap.put("EMAIL_MAP", emailMap);
+        jobDataMap.put("EMAIL_SERVICE", emailService);
 
         JobDetail jobDetail = JobBuilder.newJob(QuartzJobWrapper.class)
                 .usingJobData(jobDataMap)
@@ -98,8 +109,8 @@ public class FileMonitorServiceImpl
         return new QuartzScheduledJob(trigger, jobDetail);
     }
 
-    private List<QuartzScheduledJob> buildJobList(List<MonitorCompleteInfo> mciList) {
-        return mciList.stream().map(t -> buildJob(t)).collect(Collectors.toList());
+    private List<QuartzScheduledJob> buildJobList(List<MonitorCompleteInfo> mciList, Map<String, List<String>> emailMap) {
+        return mciList.stream().map(t -> buildJob(t, emailMap)).collect(Collectors.toList());
     }
 
     private MonitorCompleteInfo buildMCI(MonitorInfo mi, Map<String, FTPSourceFile> ftpSourceFileMap) {

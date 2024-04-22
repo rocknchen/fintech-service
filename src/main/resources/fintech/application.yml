@@ -111,7 +111,11 @@ monitorInfoList:
   - id: monitorUpdateManagerEngineStuck
     type: FTP_FILE
     referenceId: updateManagerEngineStuck
-    triggerExpression: 0/10 0/1 9-17 ? * MON-FRI
+    triggerExpression: 0 0/10 9-17 ? * MON-FRI
+    receiveList:
+      - group2
+    ccList:
+      - group1
     handlerList:
       - name: emailHandler
         params:

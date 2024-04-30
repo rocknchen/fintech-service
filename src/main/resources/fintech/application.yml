@@ -102,10 +102,9 @@ ftpSyncList:
     sendEmail: true
     subject: Traiana_SCB_PB(UAT)_GIVE_UP_TRADE
     emailReceiveList:
-      - group3
       - group1
     emailCCList:
-      - group2
+      - group5
 
 monitorInfoList:
   - id: monitorUpdateManagerEngineStuck
@@ -134,3 +133,5 @@ emailList:
     list: chesterchan@htsc.com, kennethhan@htsc.com
   - name: group4
     list: sunzhennan@kmerit.com
+  - name: group5
+    list: fatlon@sina.cn
